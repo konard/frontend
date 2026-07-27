@@ -2,8 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { useAuth } from '$lib/auth';
-	import RegisterPage from '$stylist/user/component/organism/register-page/index.svelte';
-	import type { RegistrationData } from '$stylist/user/type/object/registration-data';
+	import RegisterPage from '$stylist/auth/component/organism/register-page/index.svelte';
+	import type { RegistrationData } from '$stylist/auth/type/object/registration-data';
 
 	const auth = useAuth();
 
@@ -30,3 +30,4 @@
 	onSubmit={handleRegister}
 	loginHref="/login"
 />
+

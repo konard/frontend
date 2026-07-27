@@ -91,9 +91,10 @@
 ```svelte
 <!-- src/routes/dashboard/+page.svelte -->
 <script lang="ts">
-  import { ProtectedRoute, useAuth, RequirePermission } from '$lib/auth';
+  import { AuthGuard, useAuth, usePermissions } from '$lib/auth';
 
   const auth = useAuth();
+  const permissions = usePermissions();
 
   async function handleLogout() {
     await auth.logout();
@@ -101,62 +102,64 @@
   }
 </script>
 
-<ProtectedRoute>
-  <div class="min-h-screen bg-gray-100">
-    <nav class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center">
-            <h1 class="text-xl font-bold">Dashboard</h1>
-          </div>
-          <div class="flex items-center space-x-4">
-            <span>Welcome, {auth.user?.username}!</span>
-            <button
-              onclick={handleLogout}
-              class="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
-            >
-              Logout
-            </button>
+<AuthGuard>
+  {#snippet children()}
+    <div class="min-h-screen bg-gray-100">
+      <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex items-center">
+              <h1 class="text-xl font-bold">Dashboard</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+              <span>Welcome, {auth.user?.username}!</span>
+              <button
+                onclick={handleLogout}
+                class="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
 
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div class="px-4 py-6 sm:px-0">
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <!-- Card 1 -->
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <h3 class="text-lg font-medium text-gray-900">Profile</h3>
-              <p class="mt-1 text-sm text-gray-500">Manage your account</p>
+      <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- Card 1 -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+              <div class="p-5">
+                <h3 class="text-lg font-medium text-gray-900">Profile</h3>
+                <p class="mt-1 text-sm text-gray-500">Manage your account</p>
+              </div>
             </div>
+
+            <!-- Card 2 - Only for users with permission -->
+            {#if permissions.hasPermission('articles', 'create')}
+              <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                  <h3 class="text-lg font-medium text-gray-900">Create Article</h3>
+                  <p class="mt-1 text-sm text-gray-500">Write a new article</p>
+                </div>
+              </div>
+            {/if}
+
+            <!-- Card 3 - Only for admins -->
+            {#if permissions.hasRole('admin')}
+              <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                  <h3 class="text-lg font-medium text-gray-900">Admin Panel</h3>
+                  <p class="mt-1 text-sm text-gray-500">Manage system settings</p>
+                </div>
+              </div>
+            {/if}
           </div>
-
-          <!-- Card 2 - Only for users with permission -->
-          <RequirePermission resource="articles" action="create">
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-              <div class="p-5">
-                <h3 class="text-lg font-medium text-gray-900">Create Article</h3>
-                <p class="mt-1 text-sm text-gray-500">Write a new article</p>
-              </div>
-            </div>
-          </RequirePermission>
-
-          <!-- Card 3 - Only for admins -->
-          <RequireRole role="admin">
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-              <div class="p-5">
-                <h3 class="text-lg font-medium text-gray-900">Admin Panel</h3>
-                <p class="mt-1 text-sm text-gray-500">Manage system settings</p>
-              </div>
-            </div>
-          </RequireRole>
         </div>
-      </div>
-    </main>
-  </div>
-</ProtectedRoute>
+      </main>
+    </div>
+  {/snippet}
+</AuthGuard>
 ```
 
 ### Layout с проверкой авторизации
@@ -189,7 +192,7 @@
 ```svelte
 <!-- src/routes/profile/+page.svelte -->
 <script lang="ts">
-  import { ProtectedRoute, useAuth } from '$lib/auth';
+  import { AuthGuard, useAuth } from '$lib/auth';
 
   const auth = useAuth();
 
@@ -204,7 +207,8 @@
   }
 </script>
 
-<ProtectedRoute>
+<AuthGuard>
+  {#snippet children()}
   <div class="max-w-2xl mx-auto py-8 px-4">
     <h1 class="text-3xl font-bold mb-6">Profile</h1>
 
@@ -285,7 +289,8 @@
       </div>
     </div>
   </div>
-</ProtectedRoute>
+  {/snippet}
+</AuthGuard>
 ```
 
 ### Компонент навигации с условным рендерингом

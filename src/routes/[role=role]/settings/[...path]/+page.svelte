@@ -4,11 +4,21 @@
 	import { onMount } from 'svelte';
 	import AccountSettingsForm from '$stylist/user/component/organism/account-settings-form/index.svelte';
 	import type { AccountSettings } from '$stylist/user/type/object/account-settings';
+	import AppHeader from '$stylist/navigation/component/organism/app-header/index.svelte';
 
 	const auth = useAuth();
 
 	let { data }: { data: { role: string } } = $props();
 	const role = $derived(data.role);
+	const userDisplayName = $derived(
+		[
+			auth.user?.profile?.firstName,
+			auth.user?.profile?.lastName
+		].filter(Boolean).join(' ') ||
+			auth.user?.username ||
+			auth.user?.email ||
+			''
+	);
 
 	onMount(() => {
 		if (!auth.isAuthenticated) {
@@ -24,39 +34,34 @@
 </script>
 
 <div class="c-settings">
-	<header class="c-settings__header">
-		<div class="c-settings__header-inner">
-			<div class="c-settings__header-left">
-				<h1 class="c-settings__brand">vibe-management.pro</h1>
-				<nav class="c-settings__nav">
-					<a href={`/${role}`} class="c-settings__nav-link">Dashboard</a>
-					<a href={`/${role}/settings`} class="c-settings__nav-link c-settings__nav-link--active">
-						Settings
-					</a>
-				</nav>
-			</div>
-			<div class="c-settings__header-right">
-				{#if auth.user}
-					<span class="c-settings__username">Welcome, {auth.user.name}</span>
-				{/if}
-				<button
-					class="c-settings__logout"
-					onclick={() => {
-						auth.logout();
-						goto('/');
-					}}
-				>
-					Logout
-				</button>
-			</div>
-		</div>
-	</header>
+	<AppHeader
+		brand="vibe-management.pro"
+		navLinks={[
+			{ href: `/${role}`, label: 'Dashboard' },
+			{ href: `/${role}/settings`, label: 'Settings', active: true }
+		]}
+	>
+		{#snippet trailing()}
+			{#if auth.user}
+				<span class="c-settings__username">Welcome, {userDisplayName}</span>
+			{/if}
+			<button
+				class="c-settings__logout"
+				onclick={() => {
+					auth.logout();
+					goto('/');
+				}}
+			>
+				Logout
+			</button>
+		{/snippet}
+	</AppHeader>
 
 	<main class="c-settings__main">
 		<div class="c-settings__card">
 			<h2 class="c-settings__title">Account Settings</h2>
 			<AccountSettingsForm
-				name={auth.user?.name}
+				name={userDisplayName}
 				email={auth.user?.email}
 				onSubmit={handleSaveSettings}
 			/>
@@ -68,52 +73,6 @@
 	.c-settings {
 		min-height: 100vh;
 		background: var(--color-background-secondary, #f9fafb);
-	}
-	.c-settings__header {
-		background: var(--color-background-primary, #fff);
-		border-bottom: 1px solid var(--color-border-primary, #e5e7eb);
-		box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
-	}
-	.c-settings__header-inner {
-		max-width: 56rem;
-		margin: 0 auto;
-		padding: 0 1.5rem;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		height: 4rem;
-	}
-	.c-settings__header-left {
-		display: flex;
-		align-items: center;
-		gap: 2.5rem;
-	}
-	.c-settings__brand {
-		font-size: 1.25rem;
-		font-weight: 700;
-		color: var(--color-primary-600, #4f46e5);
-		margin: 0;
-	}
-	.c-settings__nav {
-		display: flex;
-		gap: 2rem;
-	}
-	.c-settings__nav-link {
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--color-text-secondary, #6b7280);
-		text-decoration: none;
-		padding: 0.25rem 0;
-		border-bottom: 2px solid transparent;
-	}
-	.c-settings__nav-link--active {
-		color: var(--color-text-primary, #111827);
-		border-bottom-color: var(--color-primary-500, #6366f1);
-	}
-	.c-settings__header-right {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
 	}
 	.c-settings__username {
 		font-size: 0.875rem;

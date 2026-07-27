@@ -3,7 +3,7 @@
  */
 
 import { errorHandler } from './ErrorHandler';
-import { notificationStore } from '$lib/notifications';
+import { notificationStore } from '$lib/stores/notification.store.svelte';
 import { ErrorSeverity, ErrorType, type AppError } from './types';
 
 /**
@@ -39,10 +39,7 @@ export function initializeErrorNotifications(): () => void {
 				notificationStore.error(message, {
 					title: 'Critical Error',
 					duration: 0, // Don't auto-dismiss critical errors
-					action: {
-						label: 'Reload Page',
-						callback: () => window.location.reload()
-					}
+					actions: [{ label: 'Reload Page', onClick: () => window.location.reload() }]
 				});
 				break;
 		}

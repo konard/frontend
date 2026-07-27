@@ -2,12 +2,22 @@
 	import { useAuth } from '$lib/auth';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import AuthGuard from '$stylist/user/component/organism/auth-guard/index.svelte';
+	import AuthGuard from '$stylist/auth/component/organism/auth-guard/index.svelte';
+	import AppHeader from '$stylist/navigation/component/organism/app-header/index.svelte';
 
 	const auth = useAuth();
 
 	let { data }: { data: { role: string } } = $props();
 	const role = $derived(data.role);
+	const userDisplayName = $derived(
+		[
+			auth.user?.profile?.firstName,
+			auth.user?.profile?.lastName
+		].filter(Boolean).join(' ') ||
+			auth.user?.username ||
+			auth.user?.email ||
+			''
+	);
 
 	onMount(() => {
 		if (!auth.isAuthenticated) {
@@ -25,33 +35,28 @@
 	redirectUrl="/login"
 >
 	<div class="c-dashboard">
-		<header class="c-dashboard__header">
-			<div class="c-dashboard__header-inner">
-				<div class="c-dashboard__header-left">
-					<h1 class="c-dashboard__brand">vibe-management.pro</h1>
-					<nav class="c-dashboard__nav">
-						<a href={`/${role}`} class="c-dashboard__nav-link c-dashboard__nav-link--active">
-							Dashboard
-						</a>
-						<a href={`/${role}/settings`} class="c-dashboard__nav-link">Settings</a>
-					</nav>
-				</div>
-				<div class="c-dashboard__header-right">
-					{#if auth.user}
-						<span class="c-dashboard__username">Welcome, {auth.user.name}</span>
-					{/if}
-					<button
-						class="c-dashboard__logout"
-						onclick={() => {
-							auth.logout();
-							goto('/');
-						}}
-					>
-						Logout
-					</button>
-				</div>
-			</div>
-		</header>
+		<AppHeader
+			brand="vibe-management.pro"
+			navLinks={[
+				{ href: `/${role}`, label: 'Dashboard', active: true },
+				{ href: `/${role}/settings`, label: 'Settings' }
+			]}
+		>
+			{#snippet trailing()}
+				{#if auth.user}
+					<span class="c-dashboard__username">Welcome, {userDisplayName}</span>
+				{/if}
+				<button
+					class="c-dashboard__logout"
+					onclick={() => {
+						auth.logout();
+						goto('/');
+					}}
+				>
+					Logout
+				</button>
+			{/snippet}
+		</AppHeader>
 
 		<main class="c-dashboard__main">
 			<div class="c-dashboard__card">
@@ -75,6 +80,18 @@
 							<h3 class="c-dashboard__section-title">Analytics</h3>
 							<p class="c-dashboard__section-desc">View system analytics and reports</p>
 							<button class="c-dashboard__btn">View Reports</button>
+						</section>
+					</div>
+				{:else if role === 'architect'}
+					<h2 class="c-dashboard__title">Architect Dashboard</h2>
+					<p class="c-dashboard__desc">
+						Explore the database schema and system architecture.
+					</p>
+					<div class="c-dashboard__sections">
+						<section class="c-dashboard__section">
+							<h3 class="c-dashboard__section-title">ER Diagram</h3>
+							<p class="c-dashboard__section-desc">View the database entity-relationship schema</p>
+							<a href="/architect" class="c-dashboard__btn">Open Schema</a>
 						</section>
 					</div>
 				{:else}
@@ -109,52 +126,6 @@
 	.c-dashboard {
 		min-height: 100vh;
 		background: var(--color-background-secondary, #f9fafb);
-	}
-	.c-dashboard__header {
-		background: var(--color-background-primary, #fff);
-		border-bottom: 1px solid var(--color-border-primary, #e5e7eb);
-		box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
-	}
-	.c-dashboard__header-inner {
-		max-width: 80rem;
-		margin: 0 auto;
-		padding: 0 1.5rem;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		height: 4rem;
-	}
-	.c-dashboard__header-left {
-		display: flex;
-		align-items: center;
-		gap: 2.5rem;
-	}
-	.c-dashboard__brand {
-		font-size: 1.25rem;
-		font-weight: 700;
-		color: var(--color-primary-600, #4f46e5);
-		margin: 0;
-	}
-	.c-dashboard__nav {
-		display: flex;
-		gap: 2rem;
-	}
-	.c-dashboard__nav-link {
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--color-text-secondary, #6b7280);
-		text-decoration: none;
-		padding: 0.25rem 0;
-		border-bottom: 2px solid transparent;
-	}
-	.c-dashboard__nav-link--active {
-		color: var(--color-text-primary, #111827);
-		border-bottom-color: var(--color-primary-500, #6366f1);
-	}
-	.c-dashboard__header-right {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
 	}
 	.c-dashboard__username {
 		font-size: 0.875rem;
@@ -224,15 +195,18 @@
 		margin: 0 0 1rem;
 	}
 	.c-dashboard__btn {
+		display: inline-block;
 		padding: 0.5rem 1rem;
 		background: var(--color-primary-600, #4f46e5);
 		color: var(--color-text-inverse, #fff);
 		border: none;
 		border-radius: var(--radius-md, 0.375rem);
 		font-size: 0.875rem;
+		text-decoration: none;
 		cursor: pointer;
 	}
 	.c-dashboard__btn:hover {
 		background: var(--color-primary-700, #4338ca);
 	}
 </style>
+

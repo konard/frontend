@@ -11,7 +11,7 @@
 - **TokenStorage** - управление токенами
 - **AuthService** - бизнес-логика авторизации
 - **PermissionService** - проверка прав доступа
-- **AuthStore** - управление состоянием
+- **authStore** - управление состоянием
 
 #### 2. Open/Closed Principle (OCP)
 Система открыта для расширения через паттерн Strategy:
@@ -36,37 +36,35 @@
 
 ## Структура проекта
 
+Файлы организованы по паттерну `class/<роль>/<имя>/index.ts` (классы, DI-объекты) и
+`function/<роль>/<имя>/index.svelte.ts` (реактивные функции/сторы на рунах Svelte 5).
+Тест лежит рядом как `index.spec.ts`.
+
 ```
 src/lib/auth/
-├── types.ts                    # Типы данных
-├── interfaces.ts               # Интерфейсы
-├── constants.ts                # Константы
-├── AuthContext.ts              # DI Container
-├── index.ts                    # Публичный API
-├── adapters/
-│   └── GraphQLAdapter.ts       # Адаптер для GraphQL
-├── storage/
-│   └── TokenStorage.ts         # Хранение токенов
-├── strategies/
-│   ├── EmailPasswordStrategy.ts
-│   ├── GoogleAuthStrategy.ts
-│   └── TelegramAuthStrategy.ts
-├── services/
-│   ├── AuthService.ts          # Основной сервис
-│   └── PermissionService.ts    # Сервис прав доступа
-├── stores/
-│   ├── authStore.svelte.ts     # Store (Svelte 5 Runes)
-│   └── authStore.ts            # Store (Writable)
-├── composables/
-│   ├── useAuth.svelte.ts       # Хук авторизации
-│   └── usePermissions.svelte.ts # Хук прав доступа
-└── components/
-    ├── LoginForm.svelte
-    ├── RegisterForm.svelte
-    ├── ProtectedRoute.svelte
-    ├── RequirePermission.svelte
-    └── RequireRole.svelte
+├── index.ts                              # Публичный API (barrel)
+├── class/
+│   ├── context/auth/index.ts             # AuthContext - DI Container
+│   ├── adapter/graphql/index.ts          # GraphQLAdapter
+│   ├── storage/token/index.ts            # TokenStorage
+│   ├── service/
+│   │   ├── auth/index.ts                 # AuthService
+│   │   └── permission/index.ts           # PermissionService
+│   └── strategy/
+│       ├── email-password/index.ts       # EmailPasswordStrategy
+│       ├── google-auth/index.ts          # GoogleAuthStrategy
+│       └── telegram-auth/index.ts        # TelegramAuthStrategy
+└── function/
+    ├── store/auth/index.svelte.ts        # authStore (Svelte 5 Runes)
+    └── state/
+        ├── auth/index.svelte.ts          # useAuth()
+        └── permissions/index.svelte.ts   # usePermissions()
 ```
+
+UI-компоненты авторизации (формы логина/регистрации, guard) не входят в этот модуль —
+они реэкспортируются из `$stylist/auth` (`export * from '$stylist/auth'` в `index.ts`) и
+физически лежат в `stylist-svelte/src/lib/auth/component/**` (см. `AuthGuard`, `LoginPage`,
+`RegisterPage`, `ForgotPasswordPage` и т.д.).
 
 ## Быстрый старт
 
@@ -95,40 +93,48 @@ src/lib/auth/
 
 ### 2. Использование готовых компонентов
 
+Готовые страницы/формы приходят из `$stylist/auth` (реэкспортированы через `$lib/auth`):
+
 ```svelte
 <script lang="ts">
-  import { LoginForm } from '$lib/auth';
+  import { LoginPage } from '$lib/auth';
 </script>
 
-<LoginForm />
+<LoginPage />
 ```
 
 ### 3. Защита маршрутов
 
 ```svelte
 <script lang="ts">
-  import { ProtectedRoute } from '$lib/auth';
+  import { AuthGuard } from '$lib/auth';
 </script>
 
-<ProtectedRoute>
-  <h1>Protected Content</h1>
-</ProtectedRoute>
+<AuthGuard>
+  {#snippet children()}
+    <h1>Protected Content</h1>
+  {/snippet}
+</AuthGuard>
 ```
 
 ### 4. Проверка прав доступа
 
+Отдельных guard-компонентов для прав/ролей нет — проверка выполняется через `usePermissions()`:
+
 ```svelte
 <script lang="ts">
-  import { RequirePermission, RequireRole } from '$lib/auth';
+  import { usePermissions } from '$lib/auth';
+
+  const permissions = usePermissions();
 </script>
 
-<RequirePermission resource="articles" action="create">
+{#if permissions.hasPermission('articles', 'create')}
   <button>Create Article</button>
-</RequirePermission>
+{/if}
 
-<RequireRole role="admin">
+{#if permissions.hasRole('admin')}
   <button>Admin Panel</button>
-</RequireRole>
+{/if}
 ```
 
 ## Примеры использования
@@ -244,18 +250,6 @@ src/lib/auth/
 {/if}
 ```
 
-### Использование Writable Store
-
-```svelte
-<script lang="ts">
-  import { user, isAuthenticated } from '$lib/auth';
-</script>
-
-{#if $isAuthenticated}
-  <p>Welcome, {$user?.username}!</p>
-{/if}
-```
-
 ## API Reference
 
 ### useAuth()
@@ -299,11 +293,11 @@ src/lib/auth/
 
 ### Добавление новой стратегии авторизации
 
-1. Создайте класс, реализующий `IAuthStrategy`:
+1. Создайте класс, реализующий `IAuthStrategy`, в `class/strategy/<имя>/index.ts`:
 
 ```typescript
-import type { IAuthStrategy, IGraphQLClient } from '../interfaces';
-import type { AuthResponse, AuthResult } from '../types';
+// class/strategy/custom/index.ts
+import type { AuthResponse, AuthResult, IAuthStrategy, IGraphQLClient } from '$stylist/auth';
 
 export class CustomAuthStrategy implements IAuthStrategy {
   private graphqlClient: IGraphQLClient;
@@ -322,10 +316,10 @@ export class CustomAuthStrategy implements IAuthStrategy {
 }
 ```
 
-2. Добавьте стратегию в `AuthService`:
+2. Добавьте стратегию в `class/service/auth/index.ts`:
 
 ```typescript
-import { CustomAuthStrategy } from '../strategies/CustomAuthStrategy';
+import { CustomAuthStrategy } from '../../strategy/custom';
 
 export class AuthService {
   private customAuthStrategy: CustomAuthStrategy;

@@ -2,22 +2,60 @@
 	import { useAuth } from '$lib/auth';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import Transcriber from '$stylist/audio/component/organism/transcriber/index.svelte';
+	import type { TypeTranscriptionResult } from '$stylist/audio';
 
 	const auth = useAuth();
+
+	let reply = $state('');
+	let isSending = $state(false);
+	let sendError = $state('');
 
 	onMount(() => {
 		if (auth.isAuthenticated) goto(`/${auth.roles[0]?.name ?? 'user'}`);
 	});
+
+	async function handleTranscribed(result: TypeTranscriptionResult) {
+		if (!result.text.trim()) return;
+		isSending = true;
+		sendError = '';
+		reply = '';
+		try {
+			const response = await fetch('/api/voice-chat', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ text: result.text })
+			});
+			const payload = await response.json();
+			if (!response.ok) throw new Error(payload.message ?? 'Request failed');
+			reply = payload.reply ?? '';
+		} catch (err) {
+			sendError = err instanceof Error ? err.message : String(err);
+		} finally {
+			isSending = false;
+		}
+	}
 </script>
 
 <div class="c-landing">
 	<div class="c-landing__card">
-		<h1 class="c-landing__title">Welcome to vibe-management.pro</h1>
-		<p class="c-landing__subtitle">Simple and efficient interface</p>
-		<div class="c-landing__actions">
-			<a href="/login" class="c-landing__btn c-landing__btn--primary">Sign In</a>
-			<a href="/register" class="c-landing__btn c-landing__btn--secondary">Create Account</a>
-		</div>
+		<nav class="c-landing__nav">
+			<a href="/login" class="c-landing__nav-link">Sign In</a>
+			<a href="/register" class="c-landing__nav-link c-landing__nav-link--primary">Create Account</a>
+		</nav>
+
+		<h1 class="c-landing__title">Voice Assistant</h1>
+		<p class="c-landing__subtitle">Record your voice — the transcript is sent to the local AI</p>
+
+		<Transcriber onTranscribed={handleTranscribed} />
+
+		{#if isSending}
+			<p class="c-landing__status">Waiting for the AI response…</p>
+		{:else if sendError}
+			<p class="c-landing__error">{sendError}</p>
+		{:else if reply}
+			<div class="c-landing__reply">{reply}</div>
+		{/if}
 	</div>
 </div>
 
@@ -35,50 +73,62 @@
 		padding: 1rem;
 	}
 	.c-landing__card {
-		max-width: 28rem;
+		max-width: 32rem;
 		width: 100%;
 		background: var(--color-background-primary, #fff);
 		border-radius: var(--radius-xl, 1rem);
 		box-shadow: 0 20px 40px rgb(0 0 0 / 0.1);
-		padding: 2.5rem 2rem;
-		text-align: center;
+		padding: 2rem;
+		display: grid;
+		gap: 1rem;
+	}
+	.c-landing__nav {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.75rem;
+	}
+	.c-landing__nav-link {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--color-text-secondary, #6b7280);
+		text-decoration: none;
+	}
+	.c-landing__nav-link--primary {
+		color: var(--color-primary-600, #4f46e5);
+	}
+	.c-landing__nav-link:hover {
+		text-decoration: underline;
 	}
 	.c-landing__title {
-		font-size: 1.875rem;
+		font-size: 1.5rem;
 		font-weight: 700;
 		color: var(--color-text-primary, #111827);
-		margin: 0 0 0.5rem;
+		margin: 0;
+		text-align: center;
 	}
 	.c-landing__subtitle {
 		color: var(--color-text-secondary, #6b7280);
-		margin: 0 0 2rem;
+		margin: 0 0 0.5rem;
+		text-align: center;
 	}
-	.c-landing__actions {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
+	.c-landing__status {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--color-text-secondary, #6b7280);
+		text-align: center;
 	}
-	.c-landing__btn {
-		display: block;
-		padding: 0.75rem 1rem;
-		border-radius: var(--radius-md, 0.5rem);
-		font-weight: 500;
-		text-decoration: none;
-		transition: background 0.15s, color 0.15s;
+	.c-landing__error {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--color-danger-600, #dc2626);
+		text-align: center;
 	}
-	.c-landing__btn--primary {
-		background: var(--color-primary-600, #4f46e5);
-		color: var(--color-text-inverse, #fff);
-	}
-	.c-landing__btn--primary:hover {
-		background: var(--color-primary-700, #4338ca);
-	}
-	.c-landing__btn--secondary {
-		background: var(--color-background-primary, #fff);
-		border: 1px solid var(--color-border-primary, #d1d5db);
-		color: var(--color-text-primary, #111827);
-	}
-	.c-landing__btn--secondary:hover {
+	.c-landing__reply {
+		padding: 0.85rem;
+		border: 1px solid var(--color-border-primary, #e5e7eb);
+		border-radius: 0.5rem;
 		background: var(--color-background-secondary, #f9fafb);
+		color: var(--color-text-primary, #111827);
+		white-space: pre-wrap;
 	}
 </style>

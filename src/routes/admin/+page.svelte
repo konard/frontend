@@ -2,16 +2,16 @@
 	import { useAuth } from '$lib/auth';
 	import { graphql } from '$houdini';
 	import { graphqlClient } from '$lib/graphql-client';
-	import AuthGuard from '$stylist/user/component/organism/auth-guard/index.svelte';
+	import AuthGuard from '$stylist/auth/component/organism/auth-guard/index.svelte';
 	import type { PageData } from './$types';
-	import TableList from './components/TableList.svelte';
+	import TableListPanel from '$stylist/table/component/organism/table-list-panel/index.svelte';
 	import DataTableShell from '$stylist/table/component/organism/data-table-shell/index.svelte';
 	import type { TableSchema } from '$stylist/table/type/schema/table';
 	import type { CellType } from '$stylist/table/type/enum/cell-type';
-	import RecordModal from './components/RecordModal.svelte';
-	import DeleteConfirmModal from './components/DeleteConfirmModal.svelte';
+	import SchemaFormDialog from '$stylist/form/component/organism/schema-form-dialog/index.svelte';
+	import DialogConfirm from '$stylist/navigation/component/molecule/dialog-confirm/index.svelte';
 	import ThemeModeToggle from '$stylist/theme/component/atom/theme-mode-toggle/index.svelte';
-	import { STORAGE_KEYS } from '$lib/auth/constants';
+	import { STORAGE_KEYS } from '$stylist/auth';
 
 	const auth = useAuth();
 
@@ -47,12 +47,21 @@
 	let editingRecord = $state<Record<string, any> | undefined>(undefined);
 	let isDeleteModalOpen = $state(false);
 	let deletingRecord = $state<Record<string, any> | null>(null);
+	let isDeleting = $state(false);
 
 	// Derived state
 	const tables = $derived($tablesStore?.data?.allTables ?? []);
 	const primaryKeyColumn = $derived(
 		tableSchema?.columns?.find((col) => col.primaryKey)?.name ?? 'id'
 	);
+	const deleteMessage = $derived.by(() => {
+		if (!deletingRecord) return '';
+		const preview = Object.entries(deletingRecord)
+			.slice(0, 5)
+			.map(([key, value]) => `${key}: ${value === null || value === undefined ? '-' : String(value)}`)
+			.join(', ');
+		return `Are you sure you want to delete this record from "${selectedTable}"? This action cannot be undone. (${preview})`;
+	});
 
 	// Адаптер: GraphQL columns → TableSchema для DataTableShell
 	const shellSchema: TableSchema<Record<string, unknown>> = $derived.by(() => {
@@ -159,6 +168,7 @@
 	async function handleConfirmDelete() {
 		if (!selectedTable || !deletingRecord) return;
 
+		isDeleting = true;
 		try {
 			const recordId = deletingRecord[primaryKeyColumn];
 			await deleteRecordMutation.mutate({
@@ -166,11 +176,13 @@
 				recordId: Number(recordId)
 			});
 
+			isDeleteModalOpen = false;
 			// Reload table data
 			await loadTableDetails(selectedTable);
 		} catch (error) {
 			console.error('Error deleting record:', error);
-			throw error; // Re-throw so modal can show error
+		} finally {
+			isDeleting = false;
 		}
 	}
 </script>
@@ -204,10 +216,10 @@
 		<main class="c-admin__main">
 			<div class="c-admin__grid">
 				<div class="c-admin__sidebar">
-					<TableList
-						{tables}
-						{selectedTable}
-						onSelectTable={handleSelectTable}
+					<TableListPanel
+						items={tables}
+						selectedName={selectedTable}
+						onSelect={handleSelectTable}
 					/>
 				</div>
 				<div class="c-admin__content">
@@ -242,21 +254,25 @@
 	</div>
 
 	{#if tableSchema}
-		<RecordModal
+		<SchemaFormDialog
 			isOpen={isRecordModalOpen}
 			mode={recordModalMode}
-			tableName={selectedTable ?? ''}
-			columns={tableSchema.columns}
+			title={recordModalMode === 'create' ? 'Create New Record' : 'Edit Record'}
+			subtitle={`Table: ${selectedTable ?? ''}`}
+			fields={tableSchema.columns}
 			initialData={editingRecord}
 			onClose={() => (isRecordModalOpen = false)}
 			onSave={handleSaveRecord}
 		/>
 
-		<DeleteConfirmModal
+		<DialogConfirm
 			isOpen={isDeleteModalOpen}
-			tableName={selectedTable ?? ''}
-			record={deletingRecord}
-			primaryKeyColumn={primaryKeyColumn}
+			title="Delete Record"
+			message={deleteMessage}
+			confirmText="Delete"
+			cancelText="Cancel"
+			variant="danger"
+			isLoading={isDeleting}
 			onClose={() => (isDeleteModalOpen = false)}
 			onConfirm={handleConfirmDelete}
 		/>
@@ -386,3 +402,4 @@
 		background: var(--color-primary-700, #4338ca);
 	}
 </style>
+
