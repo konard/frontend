@@ -9,7 +9,7 @@
 	import type { TableSchema } from '$stylist/table/type/schema/table';
 	import type { CellType } from '$stylist/table/type/enum/cell-type';
 	import SchemaFormDialog from '$stylist/form/component/organism/schema-form-dialog/index.svelte';
-	import DialogConfirm from '$stylist/navigation/component/molecule/dialog-confirm/index.svelte';
+	import DialogConfirm from '$stylist/dialog/component/molecule/dialog-confirm/index.svelte';
 	import ThemeModeToggle from '$stylist/theme/component/atom/theme-mode-toggle/index.svelte';
 	import { STORAGE_KEYS } from '$stylist/auth';
 
