@@ -9,6 +9,10 @@ on:
   pull_request:
     branches: [main, develop]
 
+defaults:
+  run:
+    working-directory: packages/frontend
+
 jobs:
   security-audit:
     name: Security Audit
@@ -22,18 +26,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: packages/frontend/yarn.lock
 
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run audit
+        run: yarn npm audit --audit-level moderate
         continue-on-error: true
 
-      - name: Run npm audit fix
-        run: npm audit fix --audit-level=moderate
+      - name: Attempt audit fix
+        run: yarn npm audit --audit-level moderate --fix
         continue-on-error: true
 
       - name: Check for vulnerabilities
         run: |
-          npm audit --json > audit-report.json || true
+          yarn npm audit --json --audit-level moderate > audit-report.json || true
           cat audit-report.json
 
       - name: Upload audit report

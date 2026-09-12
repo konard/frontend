@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+defaults:
+  run:
+    working-directory: packages/frontend
+
 jobs:
   deploy-staging:
     name: Deploy to Staging
@@ -18,14 +22,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: packages/frontend/yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Build for staging
         env:
           VITE_APP_ENV: staging
-        run: npm run build
+        run: yarn build
 
       - name: Deploy to staging
         run: |
@@ -49,17 +58,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: packages/frontend/yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Run tests
-        run: npm test
+        run: yarn test
 
       - name: Build for production
         env:
           VITE_APP_ENV: production
-        run: npm run build
+        run: yarn build
 
       - name: Deploy to production
         run: |

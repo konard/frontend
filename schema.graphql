@@ -1,231 +1,1143 @@
+input AddTagToConceptInput {
+  conceptId: Int!
+  tagId: Int!
+}
+
+"""Detailed user information for admin purposes."""
+type AdminUser {
+  createdAt: String!
+  email: String!
+  firstName: String
+  id: Int!
+  isActive: Boolean!
+  isVerified: Boolean!
+  lastName: String
+
+  """List of roles assigned to the user."""
+  roles: [String!]!
+  updatedAt: String
+  username: String!
+}
+
+"""Paginated response for the list of all users."""
+type AllUsersResponse {
+  """Indicates if more pages are available."""
+  hasMore: Boolean!
+
+  """Total number of users matching the filters."""
+  total: Int!
+  users: [AdminUser!]!
+}
+
+"""Represents a single audit log entry."""
+type AuditLogType {
+  """The type of action performed (e.g., 'login', 'create_concept')."""
+  action: String!
+
+  """The timestamp of when the action occurred."""
+  createdAt: DateTime!
+
+  """A human-readable description of the action."""
+  description: String
+
+  """The ID of the entity that was affected."""
+  entityId: Int
+
+  """The type of entity that was affected (e.g., 'user', 'concept')."""
+  entityType: String
+  id: Int!
+
+  """The IP address of the client."""
+  ipAddress: String
+
+  """A JSON snapshot of the data after the change."""
+  newData: JSON
+
+  """A JSON snapshot of the data before the change."""
+  oldData: JSON
+
+  """The status of the action (e.g., 'success', 'failure')."""
+  status: String!
+
+  """The User-Agent string of the client."""
+  userAgent: String
+
+  """The ID of the user who performed the action."""
+  userId: Int
+}
+
+"""Filters for querying audit logs."""
+input AuditLogsFilterInput {
+  """Filter by action type (e.g., 'login')."""
+  action: String = null
+
+  """Filter by entity ID."""
+  entityId: Int = null
+
+  """Filter by entity type (e.g., 'concept')."""
+  entityType: String = null
+
+  """Start of the date range (ISO 8601 format)."""
+  fromDate: DateTime = null
+
+  """Filter by status ('success' or 'failure')."""
+  status: String = null
+
+  """End of the date range (ISO 8601 format)."""
+  toDate: DateTime = null
+
+  """Filter by user ID."""
+  userId: Int = null
+}
+
+"""A paginated list of audit logs."""
+type AuditLogsPaginated {
+  """Indicates if more pages are available."""
+  hasMore: Boolean!
+  logs: [AuditLogType!]!
+
+  """Total number of logs matching the filters."""
+  total: Int!
+}
+
+"""Audit log statistics."""
+type AuditStats {
+  """Number of audit log entries in the last 30 days."""
+  logsLast30Days: Int!
+
+  """Total number of audit log entries."""
+  totalLogs: Int!
+}
+
+"""Payload containing authentication tokens."""
 type AuthPayload {
+  """JWT access token for authenticated requests."""
   accessToken: String!
+
+  """Token to get a new access token without re-authenticating."""
   refreshToken: String!
+
+  """Token type (always 'bearer')."""
   tokenType: String!
 }
 
-type Concept {
-  depth: Int!
-  id: Int!
-  parentId: Int
-  path: String!
-}
-
-input ConceptInput {
-  depth: Int!
-  parentId: Int = null
-  path: String!
-}
-
-input ConceptUpdateInput {
-  depth: Int = null
-  parentId: Int = null
-  path: String = null
-}
-
-type Dictionary {
-  concept: Concept
-  conceptId: Int!
-  description: String
-  id: Int!
-  image: String
-  languageId: Int!
-  name: String!
-}
-
-input DictionaryInput {
-  conceptId: Int!
-  description: String = null
-  image: String = null
-  languageId: Int!
-  name: String!
-}
-
-input DictionaryUpdateInput {
-  conceptId: Int = null
-  description: String = null
-  image: String = null
-  languageId: Int = null
-  name: String = null
-}
-
-input EmailVerificationInput {
-  token: String!
-}
-
-input GoogleAuthInput {
-  idToken: String!
-}
-
-type Language {
-  code: String!
-  id: Int!
-  name: String!
-}
-
-input LanguageInput {
-  code: String!
-  name: String!
-}
-
-input LanguageUpdateInput {
-  code: String = null
-  name: String = null
-}
-
-type MessageResponse {
+"""Standard result for bulk operations."""
+type BulkOperationResult {
+  """Number of items affected."""
+  count: Int!
   message: String!
   success: Boolean!
 }
 
-type Mutation {
-  addPermissionToRole(input: PermissionInput!, roleId: Int!): Role!
-  assignRoleToUser(roleName: String!, userId: Int!): Boolean!
-  createConcept(input: ConceptInput!): Concept!
-  createDictionary(input: DictionaryInput!): Dictionary!
-  createLanguage(input: LanguageInput!): Language!
-  createRole(input: RoleInput!): Role!
-  deleteConcept(conceptId: Int!): Boolean!
-  deleteDictionary(dictionaryId: Int!): Boolean!
-  deleteLanguage(languageId: Int!): Boolean!
-  login(input: UserLoginInput!): AuthPayload!
-  loginWithGoogle(input: GoogleAuthInput!): AuthPayload!
-  loginWithTelegram(input: TelegramAuthInput!): AuthPayload!
-  refreshToken(input: RefreshTokenInput!): AuthPayload!
-  register(input: UserRegistrationInput!): AuthPayload!
-  removeRoleFromUser(roleName: String!, userId: Int!): Boolean!
-  requestPasswordReset(input: PasswordResetRequestInput!): MessageResponse!
-  resendVerificationEmail(email: String!): MessageResponse!
-  resetPassword(input: PasswordResetInput!): MessageResponse!
-  updateConcept(conceptId: Int!, input: ConceptUpdateInput!): Concept!
-  updateDictionary(dictionaryId: Int!, input: DictionaryUpdateInput!): Dictionary!
-  updateLanguage(input: LanguageUpdateInput!, languageId: Int!): Language!
-  updateProfile(firstName: String = null, language: String = null, lastName: String = null, timezone: String = null): User!
-  updateRole(input: RoleUpdateInput!, roleId: Int!): Role!
-  verifyEmail(input: EmailVerificationInput!): MessageResponse!
+"""Information about a table column."""
+type ColumnInfo {
+  """Default value of the column."""
+  default: String
+
+  """Name of the column."""
+  name: String!
+
+  """Whether the column can be NULL."""
+  nullable: Boolean!
+
+  """Whether the column is a primary key."""
+  primaryKey: Boolean!
+
+  """Data type of the column."""
+  type: String!
 }
 
-input PasswordResetInput {
-  newPassword: String!
+"Represents a concept in the ontology's hierarchy.\n\nConcepts use a materialized path pattern (e.g., 'science.physics.relativity') to represent their position.\n"
+type Concept {
+  """Direct children of this concept (one level deep)."""
+  children: [Concept!]!
+
+  """The depth in the hierarchy (0 for root concepts)."""
+  depth: Int!
+
+  """List of translations for this concept."""
+  dictionaries: [ConceptDictionary!]!
+
+  """Unique identifier for the concept."""
+  id: Int!
+
+  """The ID of the parent concept. Null for root concepts."""
+  parentId: Int
+
+  """The materialized path (e.g., 'colors.red')."""
+  path: String!
+}
+
+"""Represents a translation (dictionary entry) for a concept."""
+type ConceptDictionary {
+  """A detailed description in this language."""
+  description: String
+
+  """The language of this translation."""
+  language: ConceptLanguage!
+
+  """The name of the concept in this language."""
+  name: String!
+}
+
+"""Input for creating a new concept."""
+input ConceptInput {
+  """Depth of the concept (should be parent.depth + 1)."""
+  depth: Int!
+
+  """The ID of the parent concept. Null to create a root concept."""
+  parentId: Int = null
+
+  """Materialized path. Must include parent's path (e.g., 'parent.child')."""
+  path: String!
+}
+
+"""Represents a language associated with a dictionary entry."""
+type ConceptLanguage {
+  """The language code (e.g., 'en', 'ru')."""
+  code: String!
+}
+
+"""
+A single search result, containing a concept and its matching translations.
+"""
+type ConceptSearchResult {
+  """The concept that matched the search."""
+  concept: Concept!
+
+  """The list of dictionary entries (translations) that matched."""
+  dictionaries: [Dictionary!]!
+
+  """The relevance score of the result."""
+  relevanceScore: Float
+}
+
+"""Input for updating an existing concept."""
+input ConceptUpdateInput {
+  """The new depth."""
+  depth: Int = null
+
+  """The new parent ID."""
+  parentId: Int = null
+
+  """The new materialized path."""
+  path: String = null
+}
+
+"""Content statistics for the admin dashboard."""
+type ContentStats {
+  """Total number of concepts."""
+  concepts: Int!
+
+  """Total number of dictionary entries (translations)."""
+  dictionaries: Int!
+
+  """Total number of languages."""
+  languages: Int!
+}
+
+input CreateTagInput {
+  color: String = null
+  name: String!
+}
+
+"""Aggregated counters for dashboard widgets."""
+type DashboardCounts {
+  """Total number of concepts."""
+  concepts: Int!
+
+  """Total number of dictionaries."""
+  dictionaries: Int!
+
+  """Total number of languages."""
+  languages: Int!
+}
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+"""
+Represents a dictionary entry, which is a translation of a concept in a specific language.
+"""
+type Dictionary {
+  """The concept this dictionary entry belongs to."""
+  concept: Concept
+
+  """The ID of the associated concept."""
+  conceptId: Int!
+
+  """A detailed description in this language."""
+  description: String
+
+  """Unique identifier for the dictionary entry."""
+  id: Int!
+
+  """URL for an image representing the concept in this language."""
+  image: String
+
+  """The ID of the associated language."""
+  languageId: Int!
+
+  """The name of the concept in this language."""
+  name: String!
+}
+
+"""Input for creating a new dictionary entry (translation)."""
+input DictionaryInput {
+  """The ID of the concept to translate."""
+  conceptId: Int!
+
+  """An optional description."""
+  description: String = null
+
+  """An optional image URL."""
+  image: String = null
+
+  """The ID of the language for this translation."""
+  languageId: Int!
+
+  """The name/translation of the concept."""
+  name: String!
+}
+
+"""Input for updating an existing dictionary entry."""
+input DictionaryUpdateInput {
+  """The new concept ID."""
+  conceptId: Int = null
+
+  """The new description."""
+  description: String = null
+
+  """The new image URL."""
+  image: String = null
+
+  """The new language ID."""
+  languageId: Int = null
+
+  """The new name/translation."""
+  name: String = null
+}
+
+"""Strategy for handling duplicate records during import."""
+enum DuplicateStrategyEnum {
+  FAIL
+  SKIP
+  UPDATE
+}
+
+"""Input for email verification."""
+input EmailVerificationInput {
+  """The verification token from the email."""
   token: String!
 }
 
+"""The type of entity being imported or exported."""
+enum EntityTypeEnum {
+  CONCEPTS
+  DICTIONARIES
+  LANGUAGES
+  USERS
+}
+
+"""The result of initiating an export job."""
+type ExportDataPayload {
+  """The ID of the created background job."""
+  jobId: Int!
+
+  """The initial status of the job."""
+  status: JobStatusEnum!
+}
+
+"""Filters for an export job."""
+input ExportFiltersInput {
+  """Filter by creation date (from)."""
+  fromDate: DateTime = null
+
+  """Filter by language code."""
+  language: String = null
+
+  """Filter by creation date (to)."""
+  toDate: DateTime = null
+}
+
+"""The file format for an export job."""
+enum ExportFormatEnum {
+  CSV
+  JSON
+  XLSX
+}
+
+"""File storage statistics."""
+type FileStats {
+  """Total number of uploaded files."""
+  total: Int!
+
+  """Total size of all files in bytes."""
+  totalSizeBytes: Int!
+
+  """Total size of all files in megabytes."""
+  totalSizeMb: Float!
+}
+
+"""Represents an uploaded file."""
+type FileType {
+  """Timestamp of when the file was uploaded."""
+  createdAt: String!
+
+  """User-defined category (e.g., 'avatar', 'document')."""
+  fileType: String!
+
+  """Sanitized filename on disk."""
+  filename: String!
+
+  """Height of the image in pixels."""
+  height: Int
+  id: Int!
+
+  """MIME type of the file (e.g., 'image/png')."""
+  mimeType: String!
+
+  """File size in bytes."""
+  size: Int!
+
+  """File size in megabytes."""
+  sizeMb: Float!
+
+  """URL to the auto-generated thumbnail (for images)."""
+  thumbnailUrl: String
+
+  """Public URL to access the file."""
+  url: String!
+
+  """Width of the image in pixels."""
+  width: Int
+}
+
+"""Input for Google OAuth authentication."""
+input GoogleAuthInput {
+  """The ID token received from Google."""
+  idToken: String!
+}
+
+"""The result of initiating an import job."""
+type ImportDataPayload {
+  """The ID of the created background job."""
+  jobId: Int!
+
+  """A message indicating the result of the initiation."""
+  message: String!
+
+  """The initial status of the job."""
+  status: JobStatusEnum!
+}
+
+"""Represents an import or export job."""
+type ImportExportJobType {
+  createdAt: DateTime!
+
+  """The entity being processed."""
+  entityType: EntityTypeEnum!
+
+  """Number of errors encountered."""
+  errorCount: Int!
+
+  """A general error message if the job failed."""
+  errorMessage: String
+
+  """A JSON array of error messages."""
+  errors: JSON
+
+  """When the export file will be deleted."""
+  expiresAt: DateTime
+
+  """Download URL for export files."""
+  fileUrl: String
+
+  """File format for exports."""
+  format: ExportFormatEnum
+  id: Int!
+
+  """Type of job ('import' or 'export')."""
+  jobType: String!
+
+  """Number of records processed so far."""
+  processedCount: Int!
+
+  """Progress percentage (0-100)."""
+  progressPercent: Int!
+
+  """Current status of the job."""
+  status: JobStatusEnum!
+
+  """Total number of records to process."""
+  totalCount: Int!
+  updatedAt: DateTime
+}
+
+"""Options for an import job."""
+input ImportOptionsInput {
+  """How to handle duplicate records."""
+  onDuplicate: DuplicateStrategyEnum! = SKIP
+
+  """If true, run a dry run without importing data."""
+  validateOnly: Boolean! = false
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON
+
+"""The current status of an import/export job."""
+enum JobStatusEnum {
+  COMPLETED
+  FAILED
+  PENDING
+  PROCESSING
+}
+
+"""Represents a language available for translations."""
+type Language {
+  """The language code (e.g., 'en', 'ru'). Must be unique."""
+  code: String!
+
+  """URL of the language flag (emoji or image URL)."""
+  flagUrl: String
+
+  """Unique identifier for the language."""
+  id: Int!
+
+  """The full name of the language (e.g., 'English', 'Русский')."""
+  name: String!
+}
+
+"""Input for creating a new language."""
+input LanguageInput {
+  """The language code (e.g., 'fr')."""
+  code: String!
+
+  """URL of the language flag (emoji or image URL)."""
+  flagUrl: String = null
+
+  """The full name of the language (e.g., 'Francais')."""
+  name: String!
+}
+
+"""Input for updating an existing language."""
+input LanguageUpdateInput {
+  """The new language code."""
+  code: String = null
+
+  """URL of the language flag."""
+  flagUrl: String = null
+
+  """The new full name."""
+  name: String = null
+}
+
+"""Generic response with a success status and a message."""
+type MessageResponse {
+  """A descriptive message about the result."""
+  message: String!
+
+  """Indicates if the operation was successful."""
+  success: Boolean!
+}
+
+type Mutation {
+  "Add a permission to a role.\n\n**Required permissions:** `admin:update:roles`\n"
+  addPermissionToRole(input: PermissionInput!, roleId: Int!): Role!
+  addTagToConcept(input: AddTagToConceptInput!): TagMutationResult!
+
+  "Assign a role to a user.\n\n**Required permissions:** `admin:update:users`\n"
+  assignRoleToUser(roleName: String!, userId: Int!): Boolean!
+
+  "Bans a user, setting their `isActive` status to `false`.\n\n**Required permissions:** `admin:update:users`\n\nExample:\n```graphql\nmutation BanUser {\n  banUser(userId: 123, reason: \"Spam and abuse\") {\n    id\n    username\n    isActive  # will be false\n  }\n}\n```\n"
+  banUser(reason: String = null, userId: Int!): AdminUser!
+
+  "Assigns a role to multiple users at once.\n\n**Required permissions:** `admin:update:users`\n\nExample:\n```graphql\nmutation BulkAssignRole {\n  bulkAssignRole(userIds: [10, 20, 30], roleName: \"editor\") {\n    success\n    count\n    message\n  }\n}\n```\n"
+  bulkAssignRole(roleName: String!, userIds: [Int!]!): BulkOperationResult!
+
+  "Removes a role from multiple users at once.\n\n**Required permissions:** `admin:update:users`\n\nExample:\n```graphql\nmutation BulkRemoveRole {\n  bulkRemoveRole(userIds: [10, 20, 30], roleName: \"editor\") {\n    success\n    count\n    message\n  }\n}\n```\n"
+  bulkRemoveRole(roleName: String!, userIds: [Int!]!): BulkOperationResult!
+
+  "Change the current user's password.\n\n**Requires authentication.**\n\nExample:\n```graphql\nmutation ChangeMyPassword {\n  changePassword(\n    currentPassword: \"OldPassword123!\"\n    newPassword: \"NewSecurePassword456!\"\n  ) {\n    success\n    message\n  }\n}\n```\n"
+  changePassword(currentPassword: String!, newPassword: String!): SuccessResponse!
+
+  "Confirm an email address change using the token from the verification email.\n\nExample:\n```graphql\nmutation CompleteEmailChange {\n  confirmEmailChange(token: \"the_token_from_the_email_link\") {\n    success\n    message\n  }\n}\n```\n"
+  confirmEmailChange(token: String!): SuccessResponse!
+
+  "Create a new concept.\n\nTo create a root concept, set `parentId` to `null` and `depth` to `0`.\nTo create a child, provide the `parentId` and set `depth` to `parent.depth + 1`.\n\nExample (create a root concept):\n```graphql\nmutation CreateRootConcept {\n  createConcept(input: {\n    path: \"sports\"\n    depth: 0\n    parentId: null\n  }) {\n    id\n    path\n    depth\n  }\n}\n```\n"
+  createConcept(input: ConceptInput!): Concept!
+
+  "Create a new dictionary entry (translation) for a concept.\n\nA concept can only have one translation per language.\n\nExample:\n```graphql\nmutation CreateTranslation {\n  createDictionary(input: {\n    conceptId: 10\n    languageId: 1\n    name: \"Красный\"\n    description: \"Цвет крови и огня\"\n  }) {\n    id\n    name\n    concept {\n      path\n    }\n  }\n}\n```\n"
+  createDictionary(input: DictionaryInput!): Dictionary!
+
+  "Create a new language.\n\nExample:\n```graphql\nmutation CreateItalianLanguage {\n  createLanguage(input: { code: \"it\", name: \"Italiano\" }) {\n    id\n    code\n    name\n  }\n}\n```\n"
+  createLanguage(input: LanguageInput!): Language!
+
+  "Create a new role.\n\n**Required permissions:** `admin:create:roles`\n"
+  createRole(input: RoleInput!): Role!
+
+  "Create a new record in a database table.\n\n**Required permissions:** `admin:create:tables`\n\nExample:\n```graphql\nmutation CreateTableRecord {\n  createTableRecord(\n    tableName: \"users\"\n    data: {username: \"newuser\", email: \"new@example.com\", passwordHash: \"...\"}\n  )\n}\n```\n"
+  createTableRecord(data: JSON!, tableName: String!): JSON!
+  createTag(input: CreateTagInput!): TagMutationResult!
+
+  "Soft-delete the current user's account.\n\nThis is a reversible action. The account can be restored by an administrator.\n\n**Requires authentication.**\n\nExample:\n```graphql\nmutation DeleteMyAccount {\n  deleteAccount(password: \"MyCurrentPassword123!\") {\n    success\n    message\n  }\n}\n```\n"
+  deleteAccount(password: String!): SuccessResponse!
+
+  "Soft delete a concept. This is a reversible action.\n\nAll child concepts and associated translations will also be soft-deleted.\n\nExample:\n```graphql\nmutation DeleteConcept {\n  deleteConcept(conceptId: 10)\n}\n```\n"
+  deleteConcept(conceptId: Int!): Boolean!
+
+  "Soft delete a dictionary entry. This is a reversible action.\n\nExample:\n```graphql\nmutation DeleteTranslation {\n  deleteDictionary(dictionaryId: 100)\n}\n```\n"
+  deleteDictionary(dictionaryId: Int!): Boolean!
+
+  "Delete a file. Users can only delete their own files.\n\nExample:\n```graphql\nmutation DeleteMyFile {\n  deleteFile(fileId: 45)\n}\n```\n"
+  deleteFile(fileId: Int!): Boolean!
+
+  "Soft delete a language. This is a reversible action.\n\nA language cannot be deleted if it is currently associated with any translations.\n\nExample:\n```graphql\nmutation DeleteLanguage {\n  deleteLanguage(languageId: 10)\n}\n```\n"
+  deleteLanguage(languageId: Int!): Boolean!
+
+  "Delete a record from a database table.\n\n**Required permissions:** `admin:delete:tables`\n\nPerforms soft delete if table has deleted_at column, otherwise hard delete.\n\nExample:\n```graphql\nmutation DeleteTableRecord {\n  deleteTableRecord(tableName: \"users\", recordId: 123)\n}\n```\n"
+  deleteTableRecord(recordId: Int!, tableName: String!): Boolean!
+  deleteTag(tagId: Int!): TagMutationResult!
+
+  "Permanently deletes a user from the database. This action is irreversible.\n\n**Required permissions:** `admin:delete:users`\n\n**WARNING:** This is a hard delete and cannot be undone. Prefer banning or soft-deleting.\n\nExample:\n```graphql\nmutation DeleteUserPermanently {\n  deleteUserPermanently(userId: 123)\n}\n```\n"
+  deleteUserPermanently(userId: Int!): Boolean!
+
+  "Initiate a background job to export data to a file (JSON, CSV, or XLSX).\n\n**Required permissions (for users):** `admin:read:users`\n\nExample:\n```graphql\nmutation ExportConcepts {\n  exportData(entityType: CONCEPTS, format: JSON, filters: { language: \"en\" }) {\n    jobId\n    status\n  }\n}\n```\n"
+  exportData(entityType: EntityTypeEnum!, filters: ExportFiltersInput = null, format: ExportFormatEnum!): ExportDataPayload!
+
+  "Initiate a background job to import data from a file (JSON, CSV, or XLSX).\n\nThis mutation requires a multipart form-data request.\n\n**Required permissions (for users):** `admin:create:users`\n\nExample (using a GraphQL client):\n```graphql\nmutation ImportConcepts($file: Upload!) {\n  importData(\n    file: $file,\n    entityType: CONCEPTS,\n    options: { onDuplicate: UPDATE }\n  ) {\n    jobId\n    status\n    message\n  }\n}\n```\n"
+  importData(entityType: EntityTypeEnum!, file: Upload!, options: ImportOptionsInput = null): ImportDataPayload!
+
+  "Logs in a user with username and password.\n\nExample:\n```graphql\nmutation Login {\n  login(input: {\n    username: \"admin\"\n    password: \"Admin123!\"\n  }) {\n    accessToken\n    refreshToken\n  }\n}\n```\n"
+  login(input: UserLoginInput!): AuthPayload!
+
+  "Authenticates a user with a Google ID token.\n\nExample:\n```graphql\nmutation LoginWithGoogle {\n  loginWithGoogle(input: {\n    idToken: \"google_id_token_from_frontend\"\n  }) {\n    accessToken\n    refreshToken\n  }\n}\n```\n"
+  loginWithGoogle(input: GoogleAuthInput!): AuthPayload!
+
+  "Authenticates a user with Telegram authentication data.\n\nExample:\n```graphql\nmutation LoginWithTelegram {\n  loginWithTelegram(input: {\n    id: \"123456789\"\n    authDate: \"1640000000\"\n    hash: \"telegram_hmac_hash\"\n    firstName: \"John\"\n    username: \"johndoe\"\n  }) {\n    accessToken\n    refreshToken\n  }\n}\n```\n"
+  loginWithTelegram(input: TelegramAuthInput!): AuthPayload!
+
+  "Permanently delete a record from the database. This action is irreversible.\n\n**Required permissions:** `admin:delete:system`\n\n**WARNING:** The record must be soft-deleted first. This cannot be undone.\n\nExample:\n```graphql\nmutation HardDeleteConcept {\n  permanentDelete(entityType: CONCEPT, entityId: 123)\n}\n```\n"
+  permanentDelete(entityId: Int!, entityType: SoftDeleteEntityType!): Boolean!
+
+  "Refreshes an access token using a refresh token.\n\nExample:\n```graphql\nmutation RefreshToken {\n  refreshToken(input: {\n    refreshToken: \"YOUR_REFRESH_TOKEN_HERE\"\n  }) {\n    accessToken\n    refreshToken\n  }\n}\n```\n"
+  refreshToken(input: RefreshTokenInput!): AuthPayload!
+
+  "Registers a new user account.\n\nExample:\n```graphql\nmutation RegisterUser {\n  register(input: {\n    username: \"newuser\"\n    email: \"newuser@example.com\"\n    password: \"SecurePass123!\"\n    firstName: \"Иван\"\n    lastName: \"Иванов\"\n  }) {\n    accessToken\n    refreshToken\n  }\n}\n```\n"
+  register(input: UserRegistrationInput!): AuthPayload!
+
+  "Remove a role from a user.\n\n**Required permissions:** `admin:update:users`\n"
+  removeRoleFromUser(roleName: String!, userId: Int!): Boolean!
+  removeTagFromConcept(input: RemoveTagFromConceptInput!): TagMutationResult!
+
+  "Initiate an email address change for the current user.\n\nSends a verification link to the new email address.\n\n**Requires authentication.**\n\nExample:\n```graphql\nmutation StartEmailChange {\n  requestEmailChange(\n    newEmail: \"john.doe@new-email.com\"\n    currentPassword: \"MyCurrentPassword123!\"\n  ) {\n    success\n    message\n  }\n}\n```\n"
+  requestEmailChange(currentPassword: String!, newEmail: String!): SuccessResponse!
+
+  "Requests a password reset email to be sent.\n\nExample:\n```graphql\nmutation RequestPasswordReset {\n  requestPasswordReset(input: {\n    email: \"user@example.com\"\n  }) {\n    success\n    message\n  }\n}\n```\n"
+  requestPasswordReset(input: PasswordResetRequestInput!): MessageResponse!
+
+  """Resends the email verification link."""
+  resendVerificationEmail(email: String!): MessageResponse!
+
+  "Resets the user's password using a token from the reset email.\n\nExample:\n```graphql\nmutation ResetPassword {\n  resetPassword(input: {\n    token: \"token_from_email\"\n    newPassword: \"NewSecurePassword123!\"\n  }) {\n    success\n    message\n  }\n}\n```\n"
+  resetPassword(input: PasswordResetInput!): MessageResponse!
+
+  "Restore a soft-deleted record, making it active again.\n\n**Required permissions:** `admin:update:system`\n\nExample:\n```graphql\nmutation RestoreMyConcept {\n  restoreRecord(entityType: CONCEPT, entityId: 123)\n}\n```\n"
+  restoreRecord(entityId: Int!, entityType: SoftDeleteEntityType!): Boolean!
+
+  "Unbans a user, setting their `isActive` status to `true`.\n\n**Required permissions:** `admin:update:users`\n\nExample:\n```graphql\nmutation UnbanUser {\n  unbanUser(userId: 123) {\n    id\n    username\n    isActive  # will be true\n  }\n}\n```\n"
+  unbanUser(userId: Int!): AdminUser!
+
+  "Update an existing concept's path, depth, or parent.\n\nExample:\n```graphql\nmutation UpdateConceptPath {\n  updateConcept(conceptId: 5, input: { path: \"games.boardgames\" }) {\n    id\n    path\n  }\n}\n```\n"
+  updateConcept(conceptId: Int!, input: ConceptUpdateInput!): Concept!
+
+  "Update an existing dictionary entry.\n\nExample:\n```graphql\nmutation UpdateTranslation {\n  updateDictionary(dictionaryId: 1, input: { name: \"Алый\" }) {\n    id\n    name\n  }\n}\n```\n"
+  updateDictionary(dictionaryId: Int!, input: DictionaryUpdateInput!): Dictionary!
+
+  "Update an existing language.\n\nExample:\n```graphql\nmutation UpdateRussianLanguage {\n  updateLanguage(languageId: 1, input: { name: \"Русский\" }) {\n    id\n    name\n  }\n}\n```\n"
+  updateLanguage(input: LanguageUpdateInput!, languageId: Int!): Language!
+
+  "Update the current user's profile.\n\n**Requires authentication.**\n\nExample:\n```graphql\nmutation UpdateMyProfile {\n  updateProfile(\n    firstName: \"John\"\n    lastName: \"Doe\"\n    bio: \"Software Engineer\"\n    language: \"en\"\n  ) {\n    id\n    profile { firstName bio }\n  }\n}\n```\n"
+  updateProfile(bio: String = null, firstName: String = null, language: String = null, lastName: String = null, timezone: String = null): User!
+
+  "Update an existing role's name or description.\n\n**Required permissions:** `admin:update:roles`\n"
+  updateRole(input: RoleUpdateInput!, roleId: Int!): Role!
+
+  "Update an existing record in a database table.\n\n**Required permissions:** `admin:update:tables`\n\nExample:\n```graphql\nmutation UpdateTableRecord {\n  updateTableRecord(\n    tableName: \"users\"\n    recordId: 123\n    data: {email: \"updated@example.com\"}\n  )\n}\n```\n"
+  updateTableRecord(data: JSON!, recordId: Int!, tableName: String!): JSON!
+
+  "Upload a user avatar. The file is automatically associated with the current user's profile.\n\nThis mutation requires a multipart form-data request.\n\nExample (using a GraphQL client):\n```graphql\nmutation UploadAvatar($file: Upload!) {\n  uploadAvatar(file: $file) {\n    id\n    url\n    thumbnailUrl\n  }\n}\n```\nVariables:\n`{ \"file\": null }` (and then attach the file via the client's upload mechanism)\n"
+  uploadAvatar(file: Upload!): FileType!
+
+  "Upload a generic file with optional entity association.\n\nThis mutation requires a multipart form-data request.\n\nExample (using a GraphQL client):\n```graphql\nmutation UploadDocument($file: Upload!) {\n  uploadFile(input: {\n    file: $file,\n    fileType: \"document\",\n    entityType: \"concept\",\n    entityId: 123\n  }) {\n    id\n    url\n  }\n}\n```\n"
+  uploadFile(input: UploadFileInput!): FileType!
+
+  "Verifies a user's email address using a token from the verification email.\n\nExample:\n```graphql\nmutation VerifyEmail {\n  verifyEmail(input: {\n    token: \"token_from_email\"\n  }) {\n    success\n    message\n  }\n}\n```\n"
+  verifyEmail(input: EmailVerificationInput!): MessageResponse!
+}
+
+"""Input for resetting a password."""
+input PasswordResetInput {
+  """The new password (min 8 characters)."""
+  newPassword: String!
+
+  """The password reset token from the email."""
+  token: String!
+}
+
+"""Input for requesting a password reset."""
 input PasswordResetRequestInput {
+  """The user's email address to send the reset link to."""
   email: String!
 }
 
+"""Represents a single permission."""
 type Permission {
+  """
+  The action allowed on the resource (e.g., 'create', 'read', 'update', 'delete').
+  """
   action: String!
   id: Int!
+
+  """The resource this permission applies to (e.g., 'concept', 'user')."""
   resource: String!
   roleId: Int!
+
+  """The scope of the action (e.g., 'own', 'all')."""
   scope: String!
 }
 
+"""Input for creating or adding a permission."""
 input PermissionInput {
+  """The action name."""
   action: String!
+
+  """The resource name."""
   resource: String!
+
+  """The scope ('own' or 'all')."""
   scope: String! = "own"
 }
 
-type AdminUser {
-  id: Int!
-  username: String!
-  email: String!
-  isActive: Boolean!
-  isVerified: Boolean!
-  createdAt: String!
-  updatedAt: String
-  firstName: String
-  lastName: String
-  roles: [String!]!
-}
-
-type AllUsersResponse {
-  users: [AdminUser!]!
-  total: Int!
-  hasMore: Boolean!
-}
-
-input UserFilters {
-  isActive: Boolean
-  isVerified: Boolean
-  roleName: String
-  search: String
-}
-
 type Query {
+  "Get a list of all database tables with metadata.\n\n**Required permissions:** `admin:read:tables`\n\nExample:\n```graphql\nquery GetAllTables {\n  allTables {\n    name\n    rowCount\n    hasSoftDelete\n  }\n}\n```\n"
+  allTables: [TableInfo!]!
+  allTags: [Tag!]!
+
+  "Get a paginated list of all users with advanced filtering.\n\n**Required permissions:** `admin:read:users`\n\nExample:\n```graphql\nquery GetAllUsers {\n  allUsers(limit: 20, filters: { isActive: true, roleName: \"editor\", search: \"john\" }) {\n    users {\n      id\n      username\n      email\n      isActive\n      roles\n    }\n    total\n    hasMore\n  }\n}\n```\n"
+  allUsers(filters: UserFilters = null, limit: Int! = 50, offset: Int! = 0): AllUsersResponse!
+
+  "Get a paginated list of all audit logs with advanced filtering.\n\n**Required permissions:** `admin:read:system`\n\nExample:\n```graphql\nquery GetAuditLogs {\n  auditLogs(filters: { userId: 1, action: \"login\", status: \"success\" }, limit: 50) {\n    logs {\n      id\n      action\n      ipAddress\n      createdAt\n    }\n    total\n  }\n}\n```\n"
+  auditLogs(filters: AuditLogsFilterInput = null, limit: Int! = 100, offset: Int! = 0): AuditLogsPaginated!
+
+  "Get a single concept by its unique ID, including its translations.\n\nExample:\n```graphql\nquery GetConceptDetails {\n  concept(conceptId: 1) {\n    id\n    path\n    dictionaries {\n      name\n      description\n      language {\n        code\n      }\n    }\n  }\n}\n```\n"
   concept(conceptId: Int!): Concept
-  concepts: [Concept!]!
+
+  "Get a single concept by its path (e.g., 'site/pages/home').\n\nExample:\n```graphql\nquery GetSiteMap {\n  conceptByPath(path: \"site/pages\") {\n    id\n    path\n    children {\n      id\n      path\n      dictionaries {\n        name\n        description\n      }\n      children {\n        id\n        path\n        dictionaries {\n          name\n          description\n        }\n      }\n    }\n  }\n}\n```\n"
+  conceptByPath(path: String!): Concept
+  conceptTags(conceptId: Int!): [Tag!]!
+
+  "Get a list of concepts. Can be filtered by parent or depth.\n\n- Providing `parentId` fetches direct children of a concept.\n- Providing `depth: 0` fetches only root concepts.\n- Providing no arguments fetches all concepts.\n\nExample (get children of concept 1):\n```graphql\nquery GetChildConcepts {\n  concepts(parentId: 1) {\n    id\n    path\n    depth\n  }\n}\n```\n"
+  concepts(depth: Int = null, parentId: Int = null): [Concept!]!
+
+  """Get aggregated counts used by the dashboard widgets."""
+  dashboardStats: DashboardCounts!
+
+  "Get a list of soft-deleted records for a given entity type.\n\n**Required permissions:** `admin:read:system`\n\nExample:\n```graphql\nquery GetDeletedConcepts {\n  deletedRecords(entityType: CONCEPT, limit: 10) {\n    entityId\n    deletedAt\n    deletedByUsername\n  }\n}\n```\n"
+  deletedRecords(entityType: SoftDeleteEntityType!, limit: Int! = 20, offset: Int! = 0): [SoftDeletedRecord!]!
+
+  "Get a list of dictionary entries, with optional filtering by concept or language.\n\nExample (get all translations for concept 10):\n```graphql\nquery GetTranslationsForConcept {\n  dictionaries(conceptId: 10) {\n    id\n    name\n    language_id\n  }\n}\n```\n"
   dictionaries(conceptId: Int = null, languageId: Int = null): [Dictionary!]!
+
+  """Get a single dictionary entry by its unique ID."""
   dictionary(dictionaryId: Int!): Dictionary
+
+  """Get a single file by its ID. Users can only access their own files."""
+  file(fileId: Int!): FileType
+
+  "Get the status and details of a specific import/export job.\n\nUsers can only view their own jobs.\n\nExample:\n```graphql\nquery GetJobStatus {\n  importJob(jobId: 123) {\n    id\n    status\n    progressPercent\n    errorCount\n    errors\n  }\n}\n```\n"
+  importJob(jobId: Int!): ImportExportJobType
+
+  """Get a single language by its unique ID."""
   language(languageId: Int!): Language
+
+  "Get a list of all available languages.\n\nExample:\n```graphql\nquery GetLanguages {\n  languages {\n    id\n    code\n    name\n  }\n}\n```\n"
   languages: [Language!]!
+
+  "Get information about the currently authenticated user.\n\n**Requires authentication.**\n\nExample:\n```graphql\nquery GetCurrentUser {\n  me {\n    id\n    username\n    email\n    profile {\n      firstName\n      lastName\n      language\n    }\n  }\n}\n```\n"
   me: User!
+
+  "Get a paginated list of the current user's own audit logs.\n\nExample:\n```graphql\nquery GetMyLogs {\n  myAuditLogs(action: \"logout\", limit: 10) {\n    logs {\n      id\n      action\n      createdAt\n    }\n  }\n}\n```\n"
+  myAuditLogs(action: String = null, limit: Int! = 50, offset: Int! = 0): AuditLogsPaginated!
+
+  "Get a list of files uploaded by the current user.\n\nExample:\n```graphql\nquery GetMyAvatars {\n  myFiles(fileType: \"avatar\", limit: 10) {\n    id\n    filename\n    url\n    createdAt\n  }\n}\n```\n"
+  myFiles(fileType: String = null, limit: Int! = 50): [FileType!]!
+
+  "Get a list of the current user's import/export jobs.\n\nExample:\n```graphql\nquery GetMyJobs {\n  myImportExportJobs(jobType: \"import\", limit: 10) {\n    id\n    status\n    entityType\n    createdAt\n  }\n}\n```\n"
+  myImportExportJobs(jobType: String = null, limit: Int! = 20, offset: Int! = 0): [ImportExportJobType!]!
+
+  """Get the roles assigned to the current user."""
   myRoles: [Role!]!
+
+  "Get the most popular concepts, ranked by the number of translations they have.\n\nThis serves as a proxy for usage and importance.\n\nExample:\n```graphql\nquery GetPopular {\n  popularConcepts(limit: 5) {\n    concept { id path }\n    dictionaries { name }\n    relevanceScore # Represents translation count\n  }\n}\n```\n"
+  popularConcepts(limit: Int! = 10): [ConceptSearchResult!]!
+
+  "Get a single role by its ID.\n\n**Required permissions:** `admin:read:roles`\n"
   role(roleId: Int!): Role!
+
+  "Get a list of all roles and their permissions.\n\n**Required permissions:** `admin:read:roles`\n"
   roles: [Role!]!
-  allUsers(limit: Int = 50, offset: Int = 0, filters: UserFilters): AllUsersResponse!
+
+  "Performs a full-text search for concepts with advanced filtering, sorting, and pagination.\n\nExample:\n```graphql\nquery SearchForConcepts {\n  searchConcepts(filters: {\n    query: \"пользователь\"\n    languageIds: [1, 2]  # Russian and English\n    categoryPath: \"users\"\n    sortBy: RELEVANCE\n    limit: 10\n  }) {\n    results {\n      concept {\n        id\n        path\n      }\n      dictionaries {\n        name\n        language_id\n      }\n      relevanceScore\n    }\n    total\n    hasMore\n  }\n}\n```\n"
+  searchConcepts(filters: SearchFilters!): SearchResult!
+
+  "Get search suggestions for autocomplete functionality.\n\nReturns a list of concept names that start with the provided query string.\n\nExample:\n```graphql\nquery GetSuggestions {\n  searchSuggestions(query: \"auth\", languageId: 1, limit: 5)\n}\n```\n"
+  searchSuggestions(languageId: Int = null, limit: Int! = 5, query: String!): [String!]!
+
+  "Get a comprehensive dashboard of system statistics.\n\n**Required permissions:** `admin:read:system`\n\nExample:\n```graphql\nquery GetSystemStats {\n  systemStats {\n    users { total active verified newLast30Days banned }\n    content { concepts dictionaries languages }\n    files { total totalSizeBytes totalSizeMb }\n    audit { totalLogs logsLast30Days }\n    roles\n  }\n}\n```\n"
+  systemStats: SystemStats!
+
+  "Get paginated data from a specific table.\n\n**Required permissions:** `admin:read:tables`\n\nExample:\n```graphql\nquery GetTableData {\n  tableData(tableName: \"users\", limit: 20, offset: 0) {\n    tableName\n    columns\n    rows\n    total\n    hasMore\n  }\n}\n```\n"
+  tableData(limit: Int! = 50, offset: Int! = 0, tableName: String!): TableDataResponse!
+
+  "Get schema information for a specific table.\n\n**Required permissions:** `admin:read:tables`\n\nExample:\n```graphql\nquery GetTableSchema {\n  tableSchema(tableName: \"users\") {\n    tableName\n    columns {\n      name\n      type\n      nullable\n      primaryKey\n      default\n    }\n  }\n}\n```\n"
+  tableSchema(tableName: String!): TableSchema!
+  tagsByName(name: String!): [Tag!]!
+
+  "Get activity statistics for a specific user, grouped by action type.\n\nIf `userId` is not provided, returns stats for the current user. Requires admin privileges to view other users' stats.\n\n**Required permissions (for other users):** `admin:read:users`\n\nExample:\n```graphql\nquery GetUserActivity {\n  userActivity(userId: 123, days: 30) {\n    action\n    count\n  }\n}\n```\n"
+  userActivity(days: Int! = 30, userId: Int = null): [UserActivityType!]!
 }
 
+"""Input for refreshing an access token."""
 input RefreshTokenInput {
+  """The refresh token received during login."""
   refreshToken: String!
 }
 
+input RemoveTagFromConceptInput {
+  conceptId: Int!
+  tagId: Int!
+}
+
+"""Represents a user role and its associated permissions."""
 type Role {
   description: String
   id: Int!
+
+  """The unique name of the role (e.g., 'admin', 'editor')."""
   name: String!
   permissions: [Permission!]!
 }
 
+"""Input for creating a new role."""
 input RoleInput {
+  """An optional description for the role."""
   description: String = null
+
+  """The name for the new role."""
   name: String!
 }
 
+"""Input for updating an existing role."""
 input RoleUpdateInput {
+  """The new description for the role."""
   description: String = null
+
+  """The new name for the role."""
   name: String = null
 }
 
+"""A comprehensive set of filters for concept searching."""
+input SearchFilters {
+  """Filter by concept path prefix (e.g., 'science.physics')."""
+  categoryPath: String = null
+
+  """Filter by creation date (from)."""
+  fromDate: DateTime = null
+
+  """Filter by a list of language IDs."""
+  languageIds: [Int!] = null
+
+  """Maximum number of results to return."""
+  limit: Int! = 20
+
+  """Offset for pagination."""
+  offset: Int! = 0
+
+  """The search term (case-insensitive)."""
+  query: String = null
+
+  """The sorting order for the results."""
+  sortBy: SearchSortEnum = RELEVANCE
+
+  """Filter by creation date (to)."""
+  toDate: DateTime = null
+}
+
+"""
+The complete search response, including results and pagination details.
+"""
+type SearchResult {
+  """Indicates if more pages are available."""
+  hasMore: Boolean!
+  limit: Int!
+  offset: Int!
+  results: [ConceptSearchResult!]!
+
+  """Total number of matching results."""
+  total: Int!
+}
+
+"""Options for sorting search results."""
+enum SearchSortEnum {
+  ALPHABET
+  DATE
+  RELEVANCE
+}
+
+"""The type of entity that supports soft deletion."""
+enum SoftDeleteEntityType {
+  CONCEPT
+  DICTIONARY
+  LANGUAGE
+  USER
+}
+
+"""Represents a soft-deleted record."""
+type SoftDeletedRecord {
+  """The timestamp of when the deletion occurred."""
+  deletedAt: DateTime!
+
+  """The ID of the user who performed the deletion."""
+  deletedById: Int
+
+  """The username of the user who performed the deletion."""
+  deletedByUsername: String
+
+  """The ID of the deleted entity."""
+  entityId: Int!
+
+  """The type of the entity."""
+  entityType: String!
+}
+
+"""A generic response indicating the success or failure of a mutation."""
+type SuccessResponse {
+  message: String!
+  success: Boolean!
+}
+
+"""A comprehensive overview of system statistics."""
+type SystemStats {
+  """Audit log statistics."""
+  audit: AuditStats!
+
+  """Content-related statistics."""
+  content: ContentStats!
+
+  """File storage statistics."""
+  files: FileStats!
+
+  """JSON object showing user distribution by role."""
+  roles: JSON!
+
+  """User-related statistics."""
+  users: UserStats!
+}
+
+"""Paginated data from a database table."""
+type TableDataResponse {
+  """List of column names."""
+  columns: [String!]!
+
+  """Whether more rows are available for pagination."""
+  hasMore: Boolean!
+
+  """List of rows as JSON objects."""
+  rows: [JSON!]!
+
+  """Name of the table."""
+  tableName: String!
+
+  """Total number of rows matching the query."""
+  total: Int!
+}
+
+"""Information about a database table."""
+type TableInfo {
+  """Whether the table supports soft delete (has deleted_at column)."""
+  hasSoftDelete: Boolean!
+
+  """Name of the table."""
+  name: String!
+
+  """Total number of rows in the table."""
+  rowCount: Int!
+}
+
+"""Schema information for a database table."""
+type TableSchema {
+  """List of columns in the table."""
+  columns: [ColumnInfo!]!
+
+  """Name of the table."""
+  tableName: String!
+}
+
+type Tag {
+  color: String
+  id: Int!
+  name: String!
+}
+
+type TagMutationResult {
+  message: String!
+  success: Boolean!
+  tag: Tag
+}
+
+"""Input for Telegram OAuth authentication."""
 input TelegramAuthInput {
+  """Authentication date from Telegram."""
   authDate: String!
+
+  """User's first name from Telegram."""
   firstName: String = null
+
+  """HMAC hash to verify data integrity."""
   hash: String!
+
+  """User ID from Telegram."""
   id: String!
+
+  """User's last name from Telegram."""
   lastName: String = null
+
+  """Profile photo URL from Telegram."""
   photoUrl: String = null
+
+  """Username from Telegram."""
   username: String = null
 }
 
+"""Represents a file upload."""
+scalar Upload
+
+"""Input for uploading a generic file."""
+input UploadFileInput {
+  """Optional entity ID to associate with the file."""
+  entityId: Int = null
+
+  """Optional entity type to associate with the file (e.g., 'concept')."""
+  entityType: String = null
+
+  """The file to upload."""
+  file: Upload!
+
+  """A category for the file (e.g., 'avatar', 'attachment')."""
+  fileType: String!
+}
+
+"""Represents a user account."""
 type User {
   email: String!
   id: Int!
+
+  """Indicates if the user account is active."""
   isActive: Boolean!
+
+  """Indicates if the user's email has been verified."""
   isVerified: Boolean!
   profile: UserProfile
   username: String!
 }
 
+"""A summary of user activity by action type."""
+type UserActivityType {
+  """The action type."""
+  action: String!
+
+  """The number of times the action was performed."""
+  count: Int!
+}
+
+"""Filters for querying the list of all users."""
+input UserFilters {
+  """Filter by active status."""
+  isActive: Boolean = null
+
+  """Filter by email verification status."""
+  isVerified: Boolean = null
+
+  """Filter by a specific role name."""
+  roleName: String = null
+
+  """Search by username, email, or name."""
+  search: String = null
+}
+
+"""Input for user login."""
 input UserLoginInput {
+  """Password."""
   password: String!
+
+  """Username or email."""
   username: String!
 }
 
+"""Represents a user's profile information."""
 type UserProfile {
+  """URL of the user's avatar image."""
   avatar: String
+
+  """A short biography or description."""
+  bio: String
   firstName: String
   id: Int!
+
+  """The user's preferred language code (e.g., 'en')."""
   language: String!
   lastName: String
+
+  """The user's timezone (e.g., 'UTC')."""
   timezone: String!
 }
 
+"""Input for user registration."""
 input UserRegistrationInput {
+  """Email (must be unique)."""
   email: String!
+
+  """User's first name."""
   firstName: String = null
+
+  """User's last name."""
   lastName: String = null
+
+  """Password (min 8 characters)."""
   password: String!
+
+  """Username (must be unique)."""
   username: String!
+}
+
+"""User statistics for the admin dashboard."""
+type UserStats {
+  """Number of active users."""
+  active: Int!
+
+  """Number of banned users."""
+  banned: Int!
+
+  """Number of new users in the last 30 days."""
+  newLast30Days: Int!
+
+  """Total number of users."""
+  total: Int!
+
+  """Number of users with verified emails."""
+  verified: Int!
 }

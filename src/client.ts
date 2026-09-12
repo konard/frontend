@@ -1,21 +1,28 @@
 import { HoudiniClient } from '$houdini';
 import { config } from '$lib/config';
-import { STORAGE_KEYS } from '$lib/auth/constants';
+import { STORAGE_KEYS } from '$stylist/auth';
 
-// Определить правильный GraphQL endpoint
+// Resolve GraphQL endpoint in a way that works for both browser and SSR execution paths
 function getGraphQLEndpoint(): string {
-	// На сервере (SSR) - используем internal Docker network или process.env
 	if (typeof window === 'undefined') {
-		// Server-side (SSR)
-		return (
+		const ssrEndpoint =
 			process.env.API_BASE_URL ||
-			(process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/graphql` : null) ||
-			'http://backend:8000/graphql'
+			(process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/graphql` : undefined);
+
+		if (ssrEndpoint) {
+			return ssrEndpoint;
+		}
+	}
+
+	const endpoint = config.graphqlEndpoint;
+
+	if (!endpoint) {
+		throw new Error(
+			'GraphQL endpoint is not configured. Provide VITE_GRAPHQL_ENDPOINT or BACKEND_URL.'
 		);
 	}
 
-	// На клиенте - используем config
-	return config.graphqlEndpoint;
+	return endpoint;
 }
 
 export default new HoudiniClient({
@@ -30,7 +37,8 @@ export default new HoudiniClient({
 
 		// For SSR requests, add Origin header to satisfy CORS
 		if (typeof window === 'undefined') {
-			headers['Origin'] = 'http://humansontology_frontend:3000';
+			headers['Origin'] =
+				process.env.FRONTEND_URL || process.env.VITE_APP_URL || 'http://localhost:5173';
 		} else {
 			// On client-side, add auth token if available
 			const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
@@ -41,4 +49,4 @@ export default new HoudiniClient({
 
 		return { headers };
 	}
-})
+});

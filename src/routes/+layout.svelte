@@ -1,59 +1,85 @@
 <script lang="ts">
 	import '../app.css';
 	import { page } from '$app/stores';
-	import favicon from '$lib/assets/favicon.svg';
-	import { ToastContainer } from '$lib/notifications';
+	import { setClientSession, setClientStarted } from '$houdini';
+	import { notificationStore } from '$lib/stores/notification.store.svelte';
 	import { initializeErrorNotifications } from '$lib/errors/integrations';
 	import { languageStore } from '$lib/stores/languageStore.svelte';
-	import { onlineStore } from '$lib/stores/online.store.svelte';
-	import { t } from '$lib/utils/i18n';
 	import { onMount } from 'svelte';
-	import AppHeader from '$lib/components/AppHeader.svelte';
+	import { useAuth } from '$lib/auth';
+	import ToastStack from '$stylist/notification/component/molecule/toast-stack/index.svelte';
+	import ThemeModeToggle from '$stylist/theme/component/atom/theme-mode-toggle/index.svelte';
+	import AppHeader from '$stylist/navigation/component/organism/app-header/index.svelte';
 
 	let { children } = $props();
+	const auth = useAuth();
 
-	// Получить переводы из layout data
-	const trans = $derived($page.data.translations || {});
-
-	// Initialize on mount
-	onMount(() => {
-		// Initialize error notifications
-		const unsubscribe = initializeErrorNotifications();
-
-		// Initialize language store from localStorage
-		languageStore.init();
-
-		return unsubscribe;
+	$effect(() => {
+		setClientStarted();
+		setClientSession(($page?.data ?? {}) as App.Session);
 	});
 
-	// Реактивно отслеживать изменение языка и показывать в консоли
-	$effect(() => {
-		const langId = languageStore.currentLanguageId;
-		console.log('[Layout] Current language ID changed to:', langId);
+	onMount(() => {
+		const unsubscribe = initializeErrorNotifications();
+		languageStore.init();
+		return () => {
+			unsubscribe?.();
+		};
 	});
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href="/favicon.svg" />
 </svelte:head>
 
-<!-- Universal Header -->
-<AppHeader />
-
-<!-- Offline Banner -->
-{#if !onlineStore.isOnline}
-	<div class="bg-yellow-500 text-white px-4 py-2 text-center text-sm font-medium sticky top-16 z-40 shadow-md">
-		<div class="flex items-center justify-center space-x-2">
-			<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-			</svg>
-			<span>{t(trans, 'ui/common/offline', 'You are currently offline. Some features may not be available.')}</span>
-		</div>
-	</div>
+{#if !auth.isAuthenticated}
+	<AppHeader brand="vibe-management.pro" brandHref="/">
+		{#snippet trailing()}
+			<ThemeModeToggle class="c-app-header__theme-toggle" />
+			<a href="/login" class="c-app-header__link">Sign In</a>
+			<a href="/register" class="c-app-header__link c-app-header__link--primary">Sign Up</a>
+		{/snippet}
+	</AppHeader>
 {/if}
 
-<!-- Page Content -->
-{@render children?.()}
+<div class="c-app-shell">
+	{@render children?.()}
+</div>
 
-<!-- Toast notifications -->
-<ToastContainer />
+<ToastStack
+	toasts={notificationStore.items}
+	position="bottom-right"
+	onDismissAll={() => notificationStore.dismissAll()}
+/>
+
+<style>
+	:global(.c-app-header__link) {
+		color: var(--color-text-secondary, #6b7280);
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius-md, 0.375rem);
+		font-size: 0.875rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition: color 0.15s;
+	}
+	:global(.c-app-header__link:hover) {
+		color: var(--color-primary-600, #4f46e5);
+	}
+	:global(.c-app-header__link--primary) {
+		background: var(--color-primary-600, #4f46e5);
+		color: var(--color-text-inverse, #fff);
+	}
+	:global(.c-app-header__link--primary:hover) {
+		background: var(--color-primary-700, #4338ca);
+		color: var(--color-text-inverse, #fff);
+	}
+	:global(.c-app-header__theme-toggle) {
+		min-width: 2.25rem;
+		min-height: 2.25rem;
+		padding: 0.5rem;
+	}
+	.c-app-shell {
+		min-height: 100vh;
+		background: var(--color-background-secondary, #f9fafb);
+	}
+</style>

@@ -14,23 +14,23 @@
 
 **Каждый класс отвечает только за одну задачу:**
 
-#### TokenStorage (`storage/TokenStorage.ts`)
+#### TokenStorage (`class/storage/token/index.ts`)
 - **Ответственность:** Хранение и получение токенов из localStorage
 - **Не отвечает за:** Логику авторизации, проверку прав, HTTP запросы
 
-#### GraphQLAdapter (`adapters/GraphQLAdapter.ts`)
+#### GraphQLAdapter (`class/adapter/graphql/index.ts`)
 - **Ответственность:** Отправка GraphQL запросов
 - **Не отвечает за:** Бизнес-логику авторизации, хранение токенов
 
-#### AuthService (`services/AuthService.ts`)
+#### AuthService (`class/service/auth/index.ts`)
 - **Ответственность:** Координация процесса авторизации
 - **Не отвечает за:** Детали реализации HTTP, хранение, проверка прав
 
-#### PermissionService (`services/PermissionService.ts`)
+#### PermissionService (`class/service/permission/index.ts`)
 - **Ответственность:** Проверка прав доступа
 - **Не отвечает за:** Авторизацию, хранение токенов
 
-#### AuthStore (`stores/authStore.svelte.ts`)
+#### authStore (`function/store/auth/index.svelte.ts`)
 - **Ответственность:** Управление состоянием авторизации
 - **Не отвечает за:** Логику авторизации, HTTP запросы
 
@@ -239,10 +239,10 @@ export class AuthService implements IAuthProvider {
 ```
 ┌────────────────────────────────────────────┐
 │         Presentation Layer                  │
-│  (Components, Composables, Stores)         │
-│  - LoginForm.svelte                        │
-│  - useAuth.svelte.ts                       │
-│  - authStore.svelte.ts                     │
+│  (Components из $stylist/auth, хуки, стор) │
+│  - AuthGuard / LoginPage ($stylist/auth)   │
+│  - useAuth (function/state/auth)           │
+│  - authStore (function/store/auth)         │
 └────────────────┬───────────────────────────┘
                  │
 ┌────────────────┴───────────────────────────┐

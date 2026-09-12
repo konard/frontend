@@ -3,10 +3,13 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		// interface Locals {}
+		interface Locals {
+			__houdini__session__?: Session;
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
+		interface Session {}
 	}
 }
 

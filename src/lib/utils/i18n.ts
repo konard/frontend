@@ -6,6 +6,50 @@
 /**
  * Тип для словаря переводов (ключ -> значение)
  */
+const I18N_DEBUG_STORAGE_KEY = 'multipult:i18n-debug';
+
+function envFlagEnabled(): boolean {
+	const rawFlag = import.meta.env?.VITE_DEBUG_I18N;
+	if (typeof rawFlag === 'string') {
+		return rawFlag.toLowerCase() === 'true';
+	}
+
+	if (typeof rawFlag === 'boolean') {
+		return rawFlag;
+	}
+
+	return false;
+}
+
+export function isI18nDebugEnabled(): boolean {
+	if (import.meta.env?.DEV) {
+		return true;
+	}
+
+	if (envFlagEnabled()) {
+		return true;
+	}
+
+	if (typeof window !== 'undefined') {
+		const stored = window.localStorage?.getItem(I18N_DEBUG_STORAGE_KEY);
+		return stored === '1' || stored === 'true';
+	}
+
+	return false;
+}
+
+function logDebug(...args: unknown[]) {
+	if (isI18nDebugEnabled()) {
+		console.debug('[i18n]', ...args);
+	}
+}
+
+export function setI18nDebugEnabled(value: boolean): void {
+	if (typeof window !== 'undefined') {
+		window.localStorage?.setItem(I18N_DEBUG_STORAGE_KEY, value ? '1' : '0');
+	}
+}
+
 export type TranslationsMap = Record<string, string>;
 
 /**
@@ -33,22 +77,19 @@ export interface DictionaryEntry {
  * // => { "ui/nav/dashboard": "Dashboard", "ui/button/login": "Login" }
  */
 export function dictionariesToMap(dictionaries: DictionaryEntry[]): TranslationsMap {
-	console.log('[dictionariesToMap] Processing', dictionaries.length, 'dictionaries');
-	if (dictionaries.length > 0) {
-		console.log('[dictionariesToMap] First entry sample:', JSON.stringify(dictionaries[0]));
-	}
+	logDebug('Processing', dictionaries.length, 'dictionaries');
 
 	const result = dictionaries.reduce((acc, dict) => {
 		// Check if dict.concept and dict.concept.path exist before accessing
 		if (dict?.concept?.path) {
 			acc[dict.concept.path] = dict.name;
 		} else {
-			console.warn('Dictionary entry missing concept.path:', dict);
+			logDebug('Dictionary entry missing concept.path:', dict);
 		}
 		return acc;
 	}, {} as TranslationsMap);
 
-	console.log('[dictionariesToMap] Result keys count:', Object.keys(result).length);
+	logDebug('Result keys count:', Object.keys(result).length);
 	return result;
 }
 

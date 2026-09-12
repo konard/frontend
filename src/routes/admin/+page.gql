@@ -1,24 +1,7 @@
-query GetAdminStats {
-	allUsers(limit: 100) {
-		users {
-			id
-			username
-			email
-			isActive
-			isVerified
-		}
-		total
-		hasMore
-	}
-	roles {
-		id
+query GetAdminTables {
+	allTables {
 		name
-		description
-		permissions {
-			id
-			resource
-			action
-			scope
-		}
+		rowCount
+		hasSoftDelete
 	}
 }

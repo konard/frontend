@@ -5,10 +5,10 @@ export function exportSvg(svgElement: SVGElement, filename: string): void {
   let source = serializer.serializeToString(svgElement);
 
   // Add name spaces.
-  if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+  if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)) {
     source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
   }
-  if (!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)) {
+  if (!source.match(/^<svg[^>]+"http:\/\/www\.w3\.org\/1999\/xlink"/)) {
     source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
   }
 
@@ -56,3 +56,4 @@ export function exportPng(svgElement: SVGElement, filename: string, width: numbe
 
     img.src = url;
 }
+

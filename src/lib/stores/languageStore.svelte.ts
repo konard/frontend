@@ -4,7 +4,14 @@
  * Автоматически сохраняет выбор в localStorage
  */
 
-const STORAGE_KEY = 'multipult_selected_language_id';
+import { isI18nDebugEnabled } from '$lib/utils/i18n';
+
+const STORAGE_KEY = 'vibe_management_pro_selected_language_id';
+const debugLog = (...args: unknown[]) => {
+	if (isI18nDebugEnabled()) {
+		console.debug('[languageStore]', ...args);
+	}
+};
 
 class LanguageStore {
 	// По умолчанию русский язык (id=1)
@@ -23,11 +30,11 @@ class LanguageStore {
 	 * @param languageId - ID языка или null для "все языки"
 	 */
 	async setLanguage(languageId: number | null): Promise<void> {
-		console.log(`[LanguageStore.setLanguage] Setting language to ${languageId}, current=${this._currentLanguageId}`);
+		debugLog('setLanguage called', { languageId, current: this._currentLanguageId });
 
 		this._currentLanguageId = languageId;
 
-		console.log(`[LanguageStore.setLanguage] After assignment, _currentLanguageId=${this._currentLanguageId}`);
+		debugLog('state updated', { current: this._currentLanguageId });
 
 		// Сохранить в localStorage
 		if (typeof window !== 'undefined') {
@@ -37,17 +44,17 @@ class LanguageStore {
 				localStorage.removeItem(STORAGE_KEY);
 			}
 
-			console.log(`[LanguageStore.setLanguage] About to invalidate, currentLanguageId getter returns=${this.currentLanguageId}`);
+			debugLog('invalidating dependent loads', { target: 'app:language', languageId });
 
 			// Перезагрузить все load functions для обновления UI
 			// Это вызовет +layout.ts, который подхватит переводы из кэша
 			try {
 				const { invalidate } = await import('$app/navigation');
-				// Используем специфичный ключ зависимости вместо invalidateAll
+				// Use the language dependency key instead of global invalidateAll
 				await invalidate('app:language');
-				console.log(`[LanguageStore.setLanguage] Invalidated app:language, new languageId=${languageId}`);
+				debugLog('invalidate complete', { languageId });
 			} catch (error) {
-				console.warn('[LanguageStore] Could not invalidate - not in browser context', error);
+				debugLog('failed to invalidate app:language', error);
 			}
 		}
 	}
@@ -61,8 +68,13 @@ class LanguageStore {
 			const saved = localStorage.getItem(STORAGE_KEY);
 			if (saved) {
 				const parsed = parseInt(saved, 10);
-				if (!isNaN(parsed)) {
+				if (!isNaN(parsed) && parsed !== this._currentLanguageId) {
 					this._currentLanguageId = parsed;
+
+					// Defer language application to next tick to avoid interfering with initial navigation lifecycle
+					setTimeout(() => {
+						void this.setLanguage(parsed);
+					}, 0);
 				}
 			}
 		}
@@ -72,7 +84,7 @@ class LanguageStore {
 	 * Сбросить выбор языка (показать все)
 	 */
 	reset(): void {
-		this.setLanguage(null);
+		void this.setLanguage(null);
 	}
 }
 

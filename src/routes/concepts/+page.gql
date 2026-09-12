@@ -1,8 +1,0 @@
-query GetConcepts {
-	concepts @list(name: "Concepts_Page") {
-		id
-		path
-		depth
-		parentId
-	}
-}

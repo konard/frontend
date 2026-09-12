@@ -2,15 +2,18 @@
 
 /** @type {import('houdini').ConfigFile} */
 const config = {
+    "schemaPath": "./schema.graphql",
     "watchSchema": {
-        "url": "http://127.0.0.1:8000/graphql/"
+        "url": import.meta.env?.VITE_GRAPHQL_ENDPOINT ?? "http://localhost:8000/graphql"
     },
     "runtimeDir": ".houdini",
     "plugins": {
         "houdini-svelte": {}
     },
     "scalars": {
-        // Add custom scalar types here if needed
+        JSON: {
+            type: "any"
+        }
     },
     "defaultCachePolicy": "CacheAndNetwork",
     "defaultPartial": true,

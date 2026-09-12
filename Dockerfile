@@ -1,21 +1,29 @@
 # Multi-stage build for optimized production image
 
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:22-slim AS builder
 
-# Устанавливаем yarn
-RUN apk add --no-cache yarn
+# Устанавливаем yarn 4.x (berry)
+RUN corepack enable && corepack prepare yarn@4.6.0 --activate
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files first for better Docker layer caching
+COPY stylist-svelte/package.json stylist-svelte/yarn.lock stylist-svelte/.yarnrc.yml ./stylist-svelte/
+COPY frontend/package.json frontend/yarn.lock frontend/.yarnrc.yml ./frontend/
 
-# Install dependencies
+WORKDIR /app/stylist-svelte
 RUN yarn install --frozen-lockfile
 
-# Copy source code
-COPY . .
+# Build the local component library before frontend installs file:../stylist-svelte
+COPY stylist-svelte/. .
+RUN yarn build
+
+WORKDIR /app/frontend
+RUN yarn install --no-immutable
+
+# Copy source code from frontend subdirectory
+COPY frontend/. .
 
 # Генерируем SvelteKit конфигурацию
 RUN npx svelte-kit sync
@@ -36,18 +44,24 @@ ENV VITE_DEBUG=${VITE_DEBUG}
 RUN yarn build
 
 # Stage 2: Production
-FROM node:20-alpine
+FROM node:22-slim
+
+# Устанавливаем yarn 4.x (berry)
+RUN corepack enable && corepack prepare yarn@4.6.0 --activate
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files and the built local component library without builder node_modules
+COPY frontend/package.json frontend/yarn.lock frontend/.yarnrc.yml ./frontend/
+COPY --from=builder /app/stylist-svelte/package.json ./stylist-svelte/package.json
+COPY --from=builder /app/stylist-svelte/dist ./stylist-svelte/dist
 
-# Install only production dependencies
-RUN npm ci --only=production
+WORKDIR /app/frontend
+# Install dependencies against the local file:../stylist-svelte package
+RUN yarn install --no-immutable
 
 # Copy built application from builder
-COPY --from=builder /app/build ./build
+COPY --from=builder /app/frontend/build ./build
 
 # Expose port
 EXPOSE 3000

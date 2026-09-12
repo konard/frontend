@@ -3,30 +3,22 @@
  * Экспортирует все публичные API модуля авторизации
  */
 
-// Types
-export * from './types';
-
-// Constants
-export * from './constants';
+export * from '$stylist/auth';
 
 // Services
-export { AuthService } from './services/AuthService';
-export { PermissionService } from './services/PermissionService';
+export { AuthService } from './class/service/auth';
+export { PermissionService } from './class/service/permission';
 
 // Context
-export { authContext, getAuthService, getPermissionService, getTokenStorage } from './AuthContext';
+export { authContext, getAuthService, getPermissionService, getTokenStorage } from './class/context/auth';
 
 // Stores
-export { authStore } from './stores/authStore.svelte';
-export { authStoreWritable, user, isAuthenticated, isLoading, error, roles } from './stores/authStore';
+export { authStore } from './function/store/auth/index.svelte';
 
 // Composables
-export { useAuth } from './composables/useAuth.svelte';
-export { usePermissions } from './composables/usePermissions.svelte';
+export { useAuth } from './function/state/auth/index.svelte';
+export { usePermissions } from './function/state/permissions/index.svelte';
 
-// Components
-export { default as LoginForm } from './components/LoginForm.svelte';
-export { default as RegisterForm } from './components/RegisterForm.svelte';
-export { default as ProtectedRoute } from './components/ProtectedRoute.svelte';
-export { default as RequirePermission } from './components/RequirePermission.svelte';
-export { default as RequireRole } from './components/RequireRole.svelte';
+// UI компоненты авторизации перенесены в $stylist/auth/component/organism/auth-guard
+
+
