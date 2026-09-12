@@ -70,3 +70,11 @@ custom properties from `src/app.css`.
   browser-mode tests in `GraphVisualization.svelte.spec.ts`.
 
 A live demo with sample and generated datasets is available at `/visualization/graph`.
+
+## Screenshots
+
+Captured from the browser test environment with `experiments/graph-screenshots.svelte.spec.ts`:
+
+| Force-directed                                         | Sankey                                                   | Network                                                    |
+| ------------------------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------- |
+| ![Force](../../../../docs/screenshots/graph-force.png) | ![Sankey](../../../../docs/screenshots/graph-sankey.png) | ![Network](../../../../docs/screenshots/graph-network.png) |

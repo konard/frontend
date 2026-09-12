@@ -447,8 +447,11 @@
 		const visNodes = new DataSet(
 			visibleData.nodes.map((node) => {
 				const style = resolveNodeStyle(node, styles);
+				// `value` is intentionally dropped: vis-network would use it to rescale the
+				// element, which conflicts with the size and width resolved from the styles.
+				const rest = { ...node, value: undefined };
 				return {
-					...node,
+					...rest,
 					id: node.id,
 					label: collapsed.includes(node.id)
 						? `${node.label ?? node.id} (+)`
@@ -464,8 +467,9 @@
 		const visEdges = new DataSet(
 			visibleData.edges.map((edge) => {
 				const style = resolveEdgeStyle(edge, styles);
+				const rest = { ...edge, value: undefined };
 				return {
-					...edge,
+					...rest,
 					id: edge.id,
 					from: edge.from,
 					to: edge.to,
